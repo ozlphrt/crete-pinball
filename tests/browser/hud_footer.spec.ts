@@ -52,7 +52,7 @@ test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
     });
 
     expect(onMapInfo.targetBadgeVisible).toBe(true);
-    expect(onMapInfo.targetBadgeText).toContain('TARGET');
+    expect(onMapInfo.targetBadgeText).toContain('BONUS');
     expect(onMapInfo.targetBadgeText).toContain('KYTHIRA');
     expect(onMapInfo.targetBadgeText).toContain('+500');
 

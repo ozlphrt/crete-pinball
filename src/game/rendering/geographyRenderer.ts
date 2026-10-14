@@ -519,8 +519,8 @@ export class GeographyRenderer {
       const cy = feat ? feat.centroid.y : label.y;
 
       if (isTarget) {
-        label.setColor('#34d399');
-        label.setStroke('#021a12', 5);
+        label.setColor('#fcd34d');
+        label.setStroke('#1f1402', 5);
         label.setFontSize(22);
         label.setDepth(36);
         const h = feat ? feat.boundingBox.maxY - feat.boundingBox.minY : 30;
@@ -543,7 +543,7 @@ export class GeographyRenderer {
       const isTarget = featId === this.currentTargetIslandId;
 
       if (isTarget) {
-        dot.setFillStyle(0x10b981, 1.0);
+        dot.setFillStyle(0xf59e0b, 1.0);
         dot.setRadius(5);
         dot.setDepth(36);
         dot.setVisible(true);

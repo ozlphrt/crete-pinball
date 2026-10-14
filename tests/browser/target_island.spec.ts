@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Target Island Green Target Sign Representation', () => {
-  test('depicts active target island with high-contrast tactical green target sign and badge', async ({
+test.describe('Target Island Celebratory Achievement Star Sign Representation', () => {
+  test('depicts active target island with celebratory golden achievement star sign and badge', async ({
     page,
   }) => {
     const errorLogs: string[] = [];
@@ -42,7 +42,7 @@ test.describe('Target Island Green Target Sign Representation', () => {
 
     expect(targetInfo).not.toBeNull();
     expect(targetInfo?.badgeVisible).toBe(true);
-    expect(targetInfo?.badgeText).toContain('TARGET');
+    expect(targetInfo?.badgeText).toContain('BONUS');
     expect(targetInfo?.badgeDepth).toBe(37);
     expect(targetInfo?.reticleDepth).toBe(35);
     expect(targetInfo?.targetIslandId).toBeTruthy();

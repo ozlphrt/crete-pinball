@@ -310,7 +310,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
         this.tutorialOverlay.updateLocale();
         this.hud.setCreteLabel(this.i18n.t('game.crete'));
         if (this.targetBadgeText) {
-          this.targetBadgeText.setText(`🎯 ${this.i18n.t('hud.target').toUpperCase()}`);
+          this.targetBadgeText.setText(`⭐ BONUS`);
         }
       },
       onReducedMotionChanged: (enabled) => {
@@ -374,12 +374,12 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
     // Floating Target Sign badge text above the active target island
     this.targetBadgeText = this.add
-      .text(0, 0, `🎯 ${this.i18n.t('hud.target').toUpperCase()} · +500`, {
+      .text(0, 0, `⭐ BONUS · +500`, {
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: '16px',
+        fontSize: '15px',
         fontStyle: 'bold',
-        color: '#34d399',
-        stroke: '#021a12',
+        color: '#fef08a',
+        stroke: '#1f1402',
         strokeThickness: 4,
         align: 'center',
       })
@@ -1452,144 +1452,157 @@ export class GamePlaceholderScene extends Phaser.Scene {
     const h = feat.boundingBox.maxY - feat.boundingBox.minY;
     const baseRadius = Math.max(26, Math.min(52, Math.max(w, h) * 0.58));
 
-    // Breathing pulse rhythm
-    const pulse = (Math.sin(time * 0.004) + 1) * 0.5;
+    // Breathing pulse rhythm (gentle, celebratory)
+    const pulse = (Math.sin(time * 0.0035) + 1) * 0.5;
     const r = baseRadius + pulse * 4;
-    const innerR = r * 0.52;
+    const innerR = r * 0.62;
 
-    // --- 1. Sonar Radar Ping (Expanding Pulse Ring) ---
-    const pingProgress = (time % 1600) / 1600;
-    const pingR = baseRadius * 0.35 + pingProgress * (baseRadius * 1.05);
-    const pingAlpha = (1 - pingProgress) * 0.70;
-    g.lineStyle(2.4, 0x34d399, pingAlpha);
-    g.strokeCircle(cx, cy, pingR);
+    // --- 1. Warm Golden Aurora Halo (Soft radiant glow under island) ---
+    g.fillStyle(0xf59e0b, 0.12 + pulse * 0.08);
+    g.fillCircle(cx, cy, r + 6);
 
-    // --- 2. Outer Target Ring ---
-    // Translucent neon emerald fill inside target area
-    g.fillStyle(0x10b981, 0.12 + pulse * 0.06);
-    g.fillCircle(cx, cy, r);
+    // --- 2. Expanding Radiant Celebration Wave (Spreading beacon of light) ---
+    const waveProgress = (time % 2200) / 2200;
+    const waveR = baseRadius * 0.45 + waveProgress * (baseRadius * 0.95);
+    const waveAlpha = (1 - waveProgress) * 0.65;
+    g.lineStyle(2.2, 0xfbbf24, waveAlpha);
+    g.strokeCircle(cx, cy, waveR);
 
-    // Dark underlay stroke for guaranteed high contrast on any terrain
-    g.lineStyle(6.0, 0x021a12, 0.95);
+    // --- 3. Luminous Golden Outer Achievement Halo ---
+    // Dark underlay stroke for guaranteed high contrast against dark sea and bright terrain
+    g.lineStyle(5.0, 0x1f1402, 0.92);
     g.strokeCircle(cx, cy, r);
-    // Neon emerald outer ring
-    g.lineStyle(3.0, 0x10b981, 1.0);
+    // Shining golden ring
+    g.lineStyle(2.6, 0xfbbf24, 0.95);
     g.strokeCircle(cx, cy, r);
 
-    // --- 3. Concentric Inner Bullseye Ring ---
-    g.fillStyle(0x34d399, 0.18 + pulse * 0.08);
-    g.fillCircle(cx, cy, innerR);
-
-    g.lineStyle(4.5, 0x021a12, 0.95);
+    // Concentric delicate inner celestial ring
+    g.lineStyle(3.0, 0x1f1402, 0.85);
     g.strokeCircle(cx, cy, innerR);
-    g.lineStyle(2.4, 0x34d399, 1.0);
+    g.lineStyle(1.4, 0xfef08a, 0.75 + pulse * 0.25);
     g.strokeCircle(cx, cy, innerR);
 
-    // --- 4. Tactical Crosshairs (N, S, E, W with center gap) ---
-    const innerGap = Math.max(10, r * 0.28);
-    const outerReach = r + 12;
+    // --- 4. Celestial Compass Diamonds at Cardinal Points ---
+    const cardinalPts = [
+      { x: cx, y: cy - r },
+      { x: cx + r, y: cy },
+      { x: cx, y: cy + r },
+      { x: cx - r, y: cy },
+    ];
+    for (const pt of cardinalPts) {
+      this.drawSparkleStar(g, pt.x, pt.y, 4.5, 0xfef08a, 0.95);
+    }
 
-    // Dark underlay crosshair lines
-    g.lineStyle(5.5, 0x021a12, 0.95);
-    g.lineBetween(cx, cy - outerReach, cx, cy - innerGap);
-    g.lineBetween(cx, cy + innerGap, cx, cy + outerReach);
-    g.lineBetween(cx - outerReach, cy, cx - innerGap, cy);
-    g.lineBetween(cx + innerGap, cy, cx + outerReach, cy);
+    // --- 5. Orbiting Constellation Sparkles (Joyful Shimmer) ---
+    const rotSpeed = time * 0.0007;
+    for (let i = 0; i < 4; i++) {
+      const angle = rotSpeed + (i * Math.PI) / 2 + Math.PI / 4;
+      const sx = cx + Math.cos(angle) * r;
+      const sy = cy + Math.sin(angle) * r;
+      const sparklePulse = (Math.sin(time * 0.006 + i * 1.5) + 1) * 0.5;
+      const sparkleSize = 4.0 + sparklePulse * 2.5;
+      this.drawSparkleStar(g, sx, sy, sparkleSize, 0xfffbeb, 0.7 + sparklePulse * 0.3);
+    }
 
-    // Vivid green crosshair lines
-    g.lineStyle(2.6, 0x10b981, 1.0);
-    g.lineBetween(cx, cy - outerReach, cx, cy - innerGap);
-    g.lineBetween(cx, cy + innerGap, cx, cy + outerReach);
-    g.lineBetween(cx - outerReach, cy, cx - innerGap, cy);
-    g.lineBetween(cx + innerGap, cy, cx + outerReach, cy);
+    // --- 6. Radiant Center Nautical Achievement Star ---
+    const starRotation = time * 0.0004;
+    this.drawEightPointStar(g, cx, cy, 14 + pulse * 2, 7 + pulse, starRotation);
 
-    // Tactical crosshair end-notches
-    const tick = 5.0;
-    g.lineStyle(5.0, 0x021a12, 0.95);
-    g.lineBetween(cx - tick, cy - outerReach, cx + tick, cy - outerReach);
-    g.lineBetween(cx - tick, cy + outerReach, cx + tick, cy + outerReach);
-    g.lineBetween(cx - outerReach, cy - tick, cx - outerReach, cy + tick);
-    g.lineBetween(cx + outerReach, cy - tick, cx + outerReach, cy + tick);
+    // Center sparkling diamond
+    g.fillStyle(0xfffbeb, 1.0);
+    g.fillCircle(cx, cy, 3.0);
+    g.fillStyle(0xf59e0b, 1.0);
+    g.fillCircle(cx, cy, 1.5);
 
-    g.lineStyle(2.4, 0x34d399, 1.0);
-    g.lineBetween(cx - tick, cy - outerReach, cx + tick, cy - outerReach);
-    g.lineBetween(cx - tick, cy + outerReach, cx + tick, cy + outerReach);
-    g.lineBetween(cx - outerReach, cy - tick, cx - outerReach, cy + tick);
-    g.lineBetween(cx + outerReach, cy - tick, cx + outerReach, cy + tick);
+    // --- 7. Celebratory Floating Achievement Badge ---
+    const bounce = Math.sin(time * 0.005) * 3;
+    const beaconTipY = cy - r - 10 + bounce;
 
-    // --- 5. Viewfinder Corner Brackets ⌜ ⌝ ⌞ ⌟ ---
-    const boxDist = r + 7;
-    const arm = Math.max(10, r * 0.28);
-
-    // Dark underlays for corner brackets
-    g.lineStyle(5.5, 0x021a12, 0.95);
-    // Top-Left ⌜
-    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist + arm, cy - boxDist);
-    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist, cy - boxDist + arm);
-    // Top-Right ⌝
-    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist - arm, cy - boxDist);
-    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist, cy - boxDist + arm);
-    // Bottom-Left ⌞
-    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist + arm, cy + boxDist);
-    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist, cy + boxDist - arm);
-    // Bottom-Right ⌟
-    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist - arm, cy + boxDist);
-    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist, cy + boxDist - arm);
-
-    // Bright mint-green corner bracket strokes
-    g.lineStyle(2.6, 0x34d399, 1.0);
-    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist + arm, cy - boxDist);
-    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist, cy - boxDist + arm);
-    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist - arm, cy - boxDist);
-    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist, cy - boxDist + arm);
-    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist + arm, cy + boxDist);
-    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist, cy + boxDist - arm);
-    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist - arm, cy + boxDist);
-    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist, cy + boxDist - arm);
-
-    // --- 6. Center Bullseye Dot ---
-    g.fillStyle(0x021a12, 0.95);
-    g.fillCircle(cx, cy, 7.0);
-    g.fillStyle(0x10b981, 1.0);
-    g.fillCircle(cx, cy, 5.2);
-    g.fillStyle(0xffffff, 1.0);
-    g.fillCircle(cx, cy, 2.2);
-
-    // --- 7. Floating Target Sign Badge & Downward Target Chevron ---
-    const bounce = Math.sin(time * 0.006) * 3;
-    const arrowTipY = cy - r - 12 + bounce;
-
-    // Tactical downward pointing triangle chevron ▼
-    g.fillStyle(0x021a12, 0.95);
-    g.fillTriangle(cx - 9, arrowTipY - 8, cx + 9, arrowTipY - 8, cx, arrowTipY + 4);
-    g.fillStyle(0x10b981, 1.0);
-    g.fillTriangle(cx - 7, arrowTipY - 7, cx + 7, arrowTipY - 7, cx, arrowTipY + 2);
+    // Golden diamond marker pointing down to the island (achievement pin)
+    g.fillStyle(0x1f1402, 0.95);
+    g.fillTriangle(cx - 7, beaconTipY - 7, cx + 7, beaconTipY - 7, cx, beaconTipY + 4);
+    g.fillStyle(0xf59e0b, 1.0);
+    g.fillTriangle(cx - 5, beaconTipY - 6, cx + 5, beaconTipY - 6, cx, beaconTipY + 2);
 
     if (this.targetBadgeText) {
       const locale = this.i18n.getLocale();
       const islandName = feat.names[locale] ?? feat.names.en ?? targetIslandId.replace(/^island-/, '');
-      const targetLabel = this.i18n.t('hud.target').toUpperCase();
-      this.targetBadgeText.setText(`🎯 ${targetLabel}: ${islandName.toUpperCase()} · +${bonusPoints}`);
+      this.targetBadgeText.setText(`⭐ BONUS: ${islandName.toUpperCase()} · +${bonusPoints}`);
 
-      const badgeW = this.targetBadgeText.width + 18;
+      const badgeW = this.targetBadgeText.width + 20;
       const badgeH = this.targetBadgeText.height + 8;
       let badgeX = cx - badgeW / 2;
-      const badgeY = arrowTipY - 10 - badgeH;
+      const badgeY = beaconTipY - 9 - badgeH;
 
       // Keep badge within world bounds horizontally
       if (badgeX < 14) badgeX = 14;
       if (badgeX + badgeW > ARENA_CONFIG.worldWidth - 14) badgeX = ARENA_CONFIG.worldWidth - 14 - badgeW;
 
-      // High contrast dark pill background
-      g.fillStyle(0x021a12, 0.94);
-      g.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, 6);
-      // Vivid emerald outline on badge pill
-      g.lineStyle(2.0, 0x10b981, 1.0);
-      g.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 6);
+      // High contrast deep obsidian-amber pill background
+      g.fillStyle(0x1f1402, 0.94);
+      g.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, 7);
+      // Radiant golden outline
+      g.lineStyle(2.0, 0xf59e0b, 1.0);
+      g.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 7);
 
       this.targetBadgeText.setPosition(badgeX + badgeW / 2, badgeY + badgeH / 2);
       this.targetBadgeText.setVisible(true);
     }
+  }
+
+  private drawSparkleStar(
+    g: Phaser.GameObjects.Graphics,
+    sx: number,
+    sy: number,
+    size: number,
+    color: number,
+    alpha: number,
+  ): void {
+    g.fillStyle(color, alpha);
+    const armW = size * 0.32;
+    g.fillTriangle(sx, sy - size, sx - armW, sy, sx + armW, sy);
+    g.fillTriangle(sx, sy + size, sx - armW, sy, sx + armW, sy);
+    g.fillTriangle(sx - size, sy, sx, sy - armW, sx, sy + armW);
+    g.fillTriangle(sx + size, sy, sx, sy - armW, sx, sy + armW);
+    g.fillStyle(0xffffff, alpha);
+    g.fillCircle(sx, sy, size * 0.22);
+  }
+
+  private drawEightPointStar(
+    g: Phaser.GameObjects.Graphics,
+    cx: number,
+    cy: number,
+    outerR: number,
+    innerR: number,
+    rotation: number,
+  ): void {
+    g.fillStyle(0x1f1402, 0.9);
+    g.fillCircle(cx, cy, outerR * 0.7);
+
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i < 16; i++) {
+      const angle = rotation + (i * Math.PI) / 8;
+      const radius = i % 2 === 0 ? outerR : innerR;
+      points.push({
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius,
+      });
+    }
+
+    g.fillStyle(0xf59e0b, 0.95);
+    g.fillPoints(points, true);
+
+    const innerPoints: { x: number; y: number }[] = [];
+    for (let i = 0; i < 16; i++) {
+      const angle = rotation + (i * Math.PI) / 8;
+      const radius = (i % 2 === 0 ? outerR : innerR) * 0.55;
+      innerPoints.push({
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius,
+      });
+    }
+    g.fillStyle(0xfef08a, 1.0);
+    g.fillPoints(innerPoints, true);
   }
 
   private updateCreteOnMapPowerMeter(p4State: HUDPhase04State, time: number): void {
