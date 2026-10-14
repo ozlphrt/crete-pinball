@@ -41,6 +41,7 @@ import { AnalyticsCollector } from '../../analytics/AnalyticsCollector';
 import { SessionCheckpointService } from '../../persistence/SessionCheckpointService';
 import { SCHEMA_VERSION, GEO_DATA_VERSION, PHYSICS_RULESET_VERSION } from '../../config';
 import { VISUAL_ASSETS } from '../../assets/visuals';
+import { CameraZoomController } from '../camera/cameraZoomController';
 
 export class GamePlaceholderScene extends Phaser.Scene {
   private i18n!: I18nManager;
@@ -53,6 +54,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
   private physicsWorld!: PhysicsWorld;
   private ballRenderer!: BallRenderer;
   private physicsOverlay!: PhysicsOverlay;
+  private cameraZoomController!: CameraZoomController;
 
   // Phase 05 Audio, Effects, Tutorial, Accessibility & Quality
   private audioManager!: AudioManager;
@@ -310,7 +312,18 @@ export class GamePlaceholderScene extends Phaser.Scene {
       },
     });
 
+    // Dynamic Camera Zoom Controller (default: OFF, smooth & seasickness-free tracking)
+    this.cameraZoomController = new CameraZoomController(
+      this.cameras.main,
+      this.cretePaddle,
+      { enabledByDefault: false },
+    );
+
     // Wire HUD buttons
+    this.hud.onToggleZoom(() => {
+      const isEnabled = this.cameraZoomController.toggle();
+      this.hud.setZoomActive(isEnabled);
+    });
     this.hud.onPauseClick(() => {
       this.togglePause();
     });
@@ -610,7 +623,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
     // Pointer Listeners (full-screen touch & drag control)
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.y < GameplayHUD.HUD_HEIGHT) return; // Ignore HUD interactions
-      this.inputAdapter.handlePointerDown(pointer.x, pointer.y);
+      this.inputAdapter.handlePointerDown(pointer.worldX, pointer.worldY);
 
       // Skip countdown and drop immediately if in ready state
       if (this.stateManager.getState() === 'ready') {
@@ -619,7 +632,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.inputAdapter.handlePointerMove(pointer.x, pointer.y);
+      this.inputAdapter.handlePointerMove(pointer.worldX, pointer.worldY);
     });
 
     this.input.on('pointerup', () => {
@@ -639,8 +652,11 @@ export class GamePlaceholderScene extends Phaser.Scene {
           const rect = canvas.getBoundingClientRect();
           if (rect.width <= 0 || rect.height <= 0) return;
 
-          const worldX = ((e.clientX - rect.left) / rect.width) * ARENA_CONFIG.worldWidth;
-          const worldY = ((e.clientY - rect.top) / rect.height) * ARENA_CONFIG.worldHeight;
+          const canvasX = ((e.clientX - rect.left) / rect.width) * ARENA_CONFIG.worldWidth;
+          const canvasY = ((e.clientY - rect.top) / rect.height) * ARENA_CONFIG.worldHeight;
+          const wp = this.cameras.main.getWorldPoint(canvasX, canvasY);
+          const worldX = wp.x;
+          const worldY = wp.y;
 
           if (type === 'down') {
             this.audioManager.resumeContext();
@@ -1122,6 +1138,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
     // Render ball(s) and dynamic graphics
     const activeBalls = this.physicsWorld.getActiveBalls();
+    this.cameraZoomController.update(deltaSeconds, activeBalls);
     this.ballRenderer.update(activeBalls, deltaSeconds);
     this.physicsOverlay.update(this.physicsWorld);
     this.geographyRenderer.update();

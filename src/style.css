@@ -238,15 +238,15 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: clamp(4px, 1.2vw, 6px);
   flex-shrink: 0;
 }
 
 .hud-pause-btn {
-  min-width: 36px;
-  min-height: 36px;
-  width: 36px;
-  height: 36px;
+  min-width: clamp(32px, 8vw, 36px);
+  min-height: clamp(32px, 8vw, 36px);
+  width: clamp(32px, 8vw, 36px);
+  height: clamp(32px, 8vw, 36px);
   padding: 0;
   border-radius: 9px;
   background: rgba(15, 32, 56, 0.75);
@@ -278,6 +278,21 @@ canvas {
   width: 16px;
   height: 16px;
   fill: currentColor;
+}
+
+/* DYNAMIC ZOOM ACTIVE TOGGLE STATE */
+.hud-zoom-btn.active {
+  background: rgba(67, 201, 240, 0.28);
+  border-color: #55E0C3;
+  color: #55E0C3;
+  box-shadow: 0 0 14px rgba(85, 224, 195, 0.65), inset 0 0 8px rgba(85, 224, 195, 0.25);
+}
+
+.hud-zoom-btn.active:hover {
+  background: rgba(67, 201, 240, 0.38);
+  border-color: #6ee7b7;
+  color: #a7f3d0;
+  box-shadow: 0 0 16px rgba(85, 224, 195, 0.8), inset 0 0 10px rgba(85, 224, 195, 0.35);
 }
 
 /* ROW 2: TARGET & STATUS (BOTTOM SLIM STRIP WITH INTEGRATED POWER TRACK) */
