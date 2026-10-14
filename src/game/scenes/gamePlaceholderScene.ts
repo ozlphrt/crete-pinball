@@ -262,8 +262,11 @@ export class GamePlaceholderScene extends Phaser.Scene {
       this.progressService,
       this.i18n,
     );
+    if (typeof window !== 'undefined') {
+      (window as any).gameEventBus = eventBus;
+    }
     eventBus.on('achievementUnlocked', (payload) => {
-      AchievementToast.show(payload);
+      this.handleAchievementUnlocked(payload);
     });
 
     // Phase 05 Interactive Tutorial
@@ -882,7 +885,41 @@ export class GamePlaceholderScene extends Phaser.Scene {
     }
   }
 
+  private handleAchievementUnlocked(payload: {
+    achievementId: string;
+    title: string;
+    description: string;
+    icon: string;
+  }): void {
+    const curState = this.stateManager.getState();
+    const wasPlaying = curState === 'playing';
+
+    if (wasPlaying) {
+      this.runController.pause();
+      this.physicsWorld.setPaused(true);
+    }
+
+    const resumeLabel = this.i18n.t('game.resume').toUpperCase() + ' ▶';
+    const resumingTemplate = (s: number) => {
+      const template = this.i18n.t('game.resumingIn');
+      return template.replace('{s}', s.toString());
+    };
+
+    AchievementToast.show(payload, {
+      durationSeconds: 3,
+      resumeLabel,
+      resumingTemplate,
+      onDismiss: () => {
+        if (wasPlaying && this.stateManager.getState() === 'paused') {
+          this.runController.resumeImmediate();
+          this.physicsWorld.setPaused(false);
+        }
+      },
+    });
+  }
+
   private restartGame(): void {
+    AchievementToast.dismissAll();
     this.audioManager.resumeContext();
     this.resultsScreen.hide();
     this.dropCount = 0;

@@ -283,6 +283,17 @@ export class RunController {
   }
 
   /**
+   * Resumes a paused run immediately without starting an extra countdown.
+   */
+  public resumeImmediate(): boolean {
+    if (this.stateManager.getState() === 'paused') {
+      this.cancelResumeTimer();
+      return this.stateManager.transitionTo('playing');
+    }
+    return false;
+  }
+
+  /**
    * Processes a contact event from physics simulation.
    */
   public handleContact(

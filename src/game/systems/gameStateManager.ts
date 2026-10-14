@@ -23,7 +23,7 @@ const PERMITTED_TRANSITIONS: Record<GameState, readonly GameState[]> = {
   tutorial: ['ready', 'menu'],
   ready: ['playing', 'menu', 'paused'],
   playing: ['paused', 'lifeLost', 'gameOver', 'menu'],
-  paused: ['resumeCountdown', 'menu', 'ready'],
+  paused: ['resumeCountdown', 'playing', 'menu', 'ready'],
   resumeCountdown: ['playing', 'paused'],
   lifeLost: ['ready', 'gameOver'],
   gameOver: ['menu', 'ready'],

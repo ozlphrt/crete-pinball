@@ -14,6 +14,7 @@ export type TranslationKey =
   | 'game.backToMenu'
   | 'game.pause'
   | 'game.resume'
+  | 'game.resumingIn'
   | 'game.paused'
   | 'game.southernDrain'
   | 'game.creteZone'
@@ -164,6 +165,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.backToMenu': 'Main Menu',
     'game.pause': 'Pause',
     'game.resume': 'Resume',
+    'game.resumingIn': 'Resuming in {s}s...',
     'game.paused': 'GAME PAUSED',
     'game.southernDrain': 'SOUTHERN DRAIN LINE (Y: 1580)',
     'game.creteZone': 'CRETE DEFENSIVE ZONE (Y: 1460)',
@@ -314,6 +316,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.backToMenu': 'Ana Menü',
     'game.pause': 'Duraklat',
     'game.resume': 'Devam Et',
+    'game.resumingIn': '{s}s içinde devam ediyor...',
     'game.paused': 'OYUN DURAKLATILDI',
     'game.southernDrain': 'GÜNEY ÇIKIŞ ÇİZGİSİ (Y: 1580)',
     'game.creteZone': 'GİRİT SAVUNMA HATTI (Y: 1460)',
@@ -465,6 +468,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.backToMenu': 'Κύριο Μενού',
     'game.pause': 'Παύση',
     'game.resume': 'Συνέχεια',
+    'game.resumingIn': 'Συνέχεια σε {s}δ...',
     'game.paused': 'ΠΑΥΣΗ ΠΑΙΧΝΙΔΙΟΥ',
     'game.southernDrain': 'ΝΟΤΙΑ ΓΡΑΜΜΗ ΕΞΟΔΟΥ (Y: 1580)',
     'game.creteZone': 'ΑΜΥΝΤΙΚΗ ΖΩΝΗ ΚΡΗΤΗΣ (Y: 1460)',
