@@ -21,7 +21,7 @@ export class AchievementToast {
     toast.className = 'achievement-toast';
     toast.style.cssText = `
       position: fixed;
-      top: 24px;
+      top: max(88px, calc(env(safe-area-inset-top, 0px) + 88px));
       left: 50%;
       transform: translateX(-50%);
       background: rgba(13, 17, 23, 0.95);
