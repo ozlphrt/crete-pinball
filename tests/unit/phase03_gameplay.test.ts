@@ -96,6 +96,26 @@ describe('Phase 03 — Core Gameplay, Scoring, and Progression', () => {
       expect(ev4).not.toBeNull();
       expect(scoringSystem.score).toBe(200);
     });
+
+    it('suppresses runaway scoring on infinite bounce traps on the same island', () => {
+      const contact = mockIslandContact('cyclades-paros');
+
+      // Hit 1 at tick 100
+      expect(scoringSystem.processContact(contact, 100)).not.toBeNull();
+      // Hit 2 at tick 120 (after cooldown)
+      expect(scoringSystem.processContact(contact, 120)).not.toBeNull();
+      // Hit 3 at tick 140: trapped / chatter farming -> must be suppressed!
+      expect(scoringSystem.processContact(contact, 140)).toBeNull();
+      // Hit 4 at tick 160: still suppressed!
+      expect(scoringSystem.processContact(contact, 160)).toBeNull();
+
+      // Ball hits Crete paddle
+      const paddleContact = mockIslandContact('island-crete', true, false);
+      scoringSystem.processContact(paddleContact, 180);
+
+      // Now island can score again!
+      expect(scoringSystem.processContact(contact, 200)).not.toBeNull();
+    });
   });
 
   describe('2. Combo Rules and Multiplier', () => {

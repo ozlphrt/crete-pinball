@@ -148,6 +148,35 @@ describe('PhysicsWorld Simulation & Determinism (Phase 02)', () => {
     expect(lastEvent!.impulse.y).toBeLessThan(0); // Pushes toward open water
   });
 
+  it('instantly extracts ball from rapid bounce chatter / infinite loop trap to open Aegean waters', () => {
+    const paddle = new CretePaddle(450);
+    const world = new PhysicsWorld(paddle, PHYSICS_PRESETS.normal);
+    const ball = world.getBall();
+    ball.state = 'in_play';
+
+    // Simulate ball caught between two opposing walls at (845, 1055) bouncing rapidly
+    ball.setPosition(845, 1055);
+    ball.setVelocity(200, 0);
+
+    const antiStuck = (world as unknown as { antiStuck: { recordBounce: (b: unknown, t: number, x: number, y: number, n: unknown[]) => unknown } }).antiStuck;
+
+    // First 3 rapid bounces in close proximity
+    antiStuck.recordBounce(ball, 10, 845, 1055, [{ x: -1, y: 0 }]);
+    antiStuck.recordBounce(ball, 15, 855, 1055, [{ x: 1, y: 0 }]);
+    antiStuck.recordBounce(ball, 20, 845, 1055, [{ x: -1, y: 0 }]);
+
+    // 4th bounce at tick 25 (< 45 ticks, within 10px) -> triggers instant escape!
+    const event = antiStuck.recordBounce(ball, 25, 855, 1055, [{ x: 1, y: 0 }]) as { reason: string };
+
+    expect(event).not.toBeNull();
+    expect(event.reason).toContain('Rapid bounce chatter');
+    // Velocity must be directed towards open Aegean waters (West-Northwest from 845, 1055 toward 450, 700)
+    expect(ball.vx).toBeLessThan(0); // Heading west towards center (450)
+    expect(ball.vy).toBeLessThan(0); // Heading north towards (700)
+    // Ball position must be physically extracted away from the crevice
+    expect(ball.x).toBeLessThan(845);
+  });
+
   it('creates and restores identical physics snapshots', () => {
     const paddle = new CretePaddle(450);
     const world = new PhysicsWorld(paddle, PHYSICS_PRESETS.normal);

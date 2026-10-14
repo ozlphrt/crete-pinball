@@ -498,6 +498,9 @@ export class PhysicsWorld {
         this.recentNormals.push(hit.normal);
         if (this.recentNormals.length > 8) this.recentNormals.shift();
 
+        // Check for rapid bounce chatter / infinite loop trap on contact
+        this.antiStuck.recordBounce(ball, this.simTick, hit.point.x, hit.point.y, this.recentNormals);
+
         remainingFraction *= 1 - hit.t;
       } else {
         ball.setPosition(p1.x, p1.y);
@@ -541,10 +544,8 @@ export class PhysicsWorld {
       return;
     }
 
-    // 6. Anti-stuck assistance check (for primary ball)
-    if (ball.id === this.primaryBall.id) {
-      this.antiStuck.update(ball, this.simTick, this.recentNormals);
-    }
+    // 6. Anti-stuck assistance check (for all active balls)
+    this.antiStuck.update(ball, this.simTick, this.recentNormals);
   }
 
   private resolveLandCollision(ball: BallBody, hit: SweptHit): void {

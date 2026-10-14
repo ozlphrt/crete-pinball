@@ -36,6 +36,8 @@ export class ScoringSystem {
   private readonly distinctIslandsHit = new Set<string>();
   private readonly lastHitTickByFeature = new Map<string, number>();
   private readonly config: ScoringSystemConfig;
+  private lastScoredFeatureId: string | null = null;
+  private consecutiveSameFeatureHits = 0;
 
   constructor(
     private readonly comboSystem: ComboSystem,
@@ -85,6 +87,8 @@ export class ScoringSystem {
     // 2. Crete paddle rebounds award zero points and preserve combo
     if (fid === 'island-crete' || fid.startsWith('crete')) {
       this.comboSystem.preserveCombo();
+      this.lastScoredFeatureId = null;
+      this.consecutiveSameFeatureHits = 0;
       return null;
     }
 
@@ -100,6 +104,20 @@ export class ScoringSystem {
       // Jitter or persistent contact: suppress duplicate scoring
       return null;
     }
+
+    // Anti-trap protection: limit consecutive scoring hits on the exact same island
+    // without hitting other islands or the paddle
+    if (this.lastScoredFeatureId === fid) {
+      this.consecutiveSameFeatureHits++;
+      if (this.consecutiveSameFeatureHits > 2) {
+        // Suppress infinite loop score spam
+        return null;
+      }
+    } else {
+      this.lastScoredFeatureId = fid;
+      this.consecutiveSameFeatureHits = 1;
+    }
+
     this.lastHitTickByFeature.set(fid, currentTick);
 
     // 5. Evaluate combo progression
@@ -158,6 +176,8 @@ export class ScoringSystem {
     this.targetHitsCount = 0;
     this.distinctIslandsHit.clear();
     this.lastHitTickByFeature.clear();
+    this.lastScoredFeatureId = null;
+    this.consecutiveSameFeatureHits = 0;
   }
 
   /**
@@ -174,5 +194,7 @@ export class ScoringSystem {
     for (const id of state.distinctIslands) {
       this.distinctIslandsHit.add(id);
     }
+    this.lastScoredFeatureId = null;
+    this.consecutiveSameFeatureHits = 0;
   }
 }
