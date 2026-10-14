@@ -166,7 +166,7 @@ export class EffectDirector {
 
   public spawnIslandHitEffects(
     point: Point2D,
-    points: number,
+    _points: number,
     isSpecial: boolean,
     isTarget: boolean,
     speed: number,
@@ -191,10 +191,7 @@ export class EffectDirector {
       });
     }
 
-    // Floating Score text
-    if (points > 0 && this.activeScoreTexts.length < this.maxScoreTexts) {
-      this.spawnFloatingScore(point.x, point.y - 12, points, isTarget);
-    }
+    // Floating score points suppressed on collision per user request to declutter and showcase prominent island names
 
     // Thunderstorm micro-lightning arc crackling locally at the impact point
     this.spawnMicroLightning(point, speed, isTarget ? 0xf5bf62 : isSpecial ? 0x55e0c3 : 0x38bdf8);
@@ -379,7 +376,8 @@ export class EffectDirector {
     }
   }
 
-  private spawnFloatingScore(x: number, y: number, points: number, isTarget: boolean): void {
+  public spawnFloatingScore(x: number, y: number, points: number, isTarget: boolean): void {
+    if (this.activeScoreTexts.length >= this.maxScoreTexts) return;
     const textColor = isTarget ? '#F5BF62' : '#55E0C3';
     const textStr = `+${points}`;
 

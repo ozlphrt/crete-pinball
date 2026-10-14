@@ -153,11 +153,30 @@ export class GeographyRenderer {
     if (featureId === 'island-crete') {
       segs = this.cretePaddle.getWorldCollisionSegments();
       pt = impactPoint ?? { x: this.cretePaddle.x, y: this.cretePaddle.y };
+
+      // Make Crete island label on paddle pulse dramatically bigger on collision
+      if (this.creteLabel) {
+        this.scene.tweens.killTweensOf(this.creteLabel);
+        this.creteLabel.setDepth(185);
+        this.creteLabel.setColor('#fde047');
+        this.scene.tweens.add({
+          targets: this.creteLabel,
+          scale: 2.0,
+          duration: 180,
+          yoyo: true,
+          ease: 'Back.easeOut',
+          onComplete: () => {
+            this.creteLabel?.setScale(1.0);
+            this.creteLabel?.setColor('#e2e8f0');
+            this.creteLabel?.setDepth(12);
+          },
+        });
+      }
     } else {
       const feature = getStaticFeatures().find((f) => f.id === featureId);
       if (!feature) return;
 
-      // Display floating name banner dynamically when the island is hit
+      // Display floating name banner dynamically and noticeably bigger when the island is hit
       if (!feature.classification.includes('mainland')) {
         this.spawnIslandHitLabel(feature);
       }
@@ -185,7 +204,7 @@ export class GeographyRenderer {
   }
 
   /**
-   * Spawns an animated floating island banner that pops up dynamically when struck.
+   * Spawns an animated floating island banner that pops up dynamically and noticeably bigger when struck.
    */
   public spawnIslandHitLabel(feature: IslandFeature): void {
     const cx = feature.centroid.x;
@@ -200,69 +219,100 @@ export class GeographyRenderer {
       return;
     }
 
-    // If the island already has a permanent visible label on the map, pulse the existing label
-    // instead of spawning a duplicate overlapping label
+    // Clean up any existing active hit label for this island to avoid overlap stacking
+    const existingHitIdx = this.activeHitLabels.findIndex(
+      (lbl) => (lbl as unknown as { featureId?: string }).featureId === feature.id,
+    );
+    if (existingHitIdx !== -1) {
+      const oldLbl = this.activeHitLabels[existingHitIdx];
+      if (oldLbl) {
+        this.scene.tweens.killTweensOf(oldLbl);
+        oldLbl.destroy();
+      }
+      this.activeHitLabels.splice(existingHitIdx, 1);
+    }
+
+    // Check if the island has a permanent label currently visible on the map
     const existingLabel = this.labelObjects.find(
       (lbl) => (lbl as unknown as { featureId?: string }).featureId === feature.id,
     );
-    if (existingLabel && !isSpecial && !isTarget) {
-      this.scene.tweens.killTweensOf(existingLabel);
-      this.scene.tweens.add({
-        targets: existingLabel,
-        scale: 1.25,
-        duration: 120,
-        yoyo: true,
-        ease: 'Quad.easeOut',
-      });
-      return;
+    const hasVisiblePermanentLabel = existingLabel && existingLabel.visible;
+
+    if (hasVisiblePermanentLabel) {
+      existingLabel.setAlpha(0);
     }
 
     const localizedName = rawName.toUpperCase();
-    let textColor = '#e0f2fe';
-    const strokeColor = '#030712';
+    let textColor = '#f8fafc';
+    const strokeColor = '#020617';
     let prefix = '';
+    const fontSize = isSpecial || isTarget ? '34px' : '28px';
 
     if (isTarget) {
-      textColor = '#34d399';
+      textColor = '#fde047'; // radiant golden yellow for targeted island
       prefix = '🎯 ';
     } else if (isSpecial) {
-      textColor = '#7dd3fc';
+      textColor = '#38bdf8'; // electric cyan for special ability islands
       prefix = '✨ ';
     }
 
+    // Clamp position within playfield bounds so long island names never clip against screen borders
+    const halfWidthEstimate = isSpecial || isTarget ? 130 : 105;
+    const clampedCx = Math.max(
+      halfWidthEstimate + 12,
+      Math.min(ARENA_CONFIG.worldWidth - (halfWidthEstimate + 12), cx),
+    );
+    const startY = Math.max(170, cy - 10);
+    const peakY = Math.max(140, startY - 24);
+    const floatEndY = Math.max(115, peakY - 28);
+
     const label = this.scene.add
-      .text(cx, cy - 8, `${prefix}${localizedName}`, {
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: isSpecial || isTarget ? '21px' : '18px',
-        fontStyle: 'bold',
+      .text(clampedCx, startY, `${prefix}${localizedName}`, {
+        fontFamily: 'Outfit, Inter, system-ui, -apple-system, sans-serif',
+        fontSize,
+        fontStyle: '900',
         color: textColor,
         stroke: strokeColor,
-        strokeThickness: 5,
+        strokeThickness: 7,
         align: 'center',
+        shadow: {
+          offsetX: 0,
+          offsetY: 3,
+          color: '#000000',
+          blur: 8,
+          stroke: true,
+          fill: true,
+        },
       })
       .setOrigin(0.5)
-      .setDepth(160)
-      .setScale(0.85)
-      .setAlpha(0);
+      .setDepth(185)
+      .setScale(0.7)
+      .setAlpha(0.2);
 
+    (label as unknown as { featureId?: string }).featureId = feature.id;
     this.activeHitLabels.push(label);
 
+    // Dynamic punch-in animation: expands up to 1.25x scale (peak ~35px to 42.5px font size!)
     this.scene.tweens.add({
       targets: label,
-      y: cy - 28,
-      scale: 1.0,
+      y: peakY,
+      scale: 1.25,
       alpha: 1,
-      duration: 160,
+      duration: 180,
       ease: 'Back.easeOut',
       onComplete: () => {
         this.scene.tweens.add({
           targets: label,
-          y: cy - 52,
+          y: floatEndY,
+          scale: 1.1,
           alpha: 0,
-          delay: 500,
-          duration: 450,
-          ease: 'Power1',
+          delay: 650,
+          duration: 420,
+          ease: 'Power2',
           onComplete: () => {
+            if (hasVisiblePermanentLabel && existingLabel) {
+              existingLabel.setAlpha(1);
+            }
             label.destroy();
             const idx = this.activeHitLabels.indexOf(label);
             if (idx !== -1) this.activeHitLabels.splice(idx, 1);

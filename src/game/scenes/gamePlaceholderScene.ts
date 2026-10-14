@@ -444,23 +444,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
             points: scored.totalPointsAwarded,
           });
         }
-        let text = scored.isTargetHit
-          ? `+${scored.totalPointsAwarded} TARGET!`
-          : `+${scored.totalPointsAwarded}`;
-        if (scored.specialBonus) {
-          text += ` (SPECIAL +${scored.specialBonus})`;
-        }
         if (scored.extraLifeGranted) {
-          text += ' 🌟 +1 BALL!';
           this.showAnnouncement('🌟 EXTRA BALL EARNED!', '#55E0C3');
           eventBus.emit('extraBallEarned', { totalLives: this.runController.lives });
         }
-        this.hud.spawnFloatingScore(
-          event.point.x,
-          event.point.y,
-          text,
-          scored.isTargetHit || scored.extraLifeGranted,
-        );
       }
       // Flash illuminated coastline & reveal localized daylight terrain on impact
       this.geographyRenderer.flashIslandImpact(event.featureId, event.point, event.incomingSpeed);
