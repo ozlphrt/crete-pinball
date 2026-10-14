@@ -27,16 +27,24 @@ function createMockBall(x: number, y: number, radius = 12): BallBody {
 }
 
 describe('CameraZoomController', () => {
-  it('initializes with zoom strictly disabled (OFF) by default', () => {
+  it('initializes with zoom enabled by default', () => {
     const camera = createMockCamera();
     const paddle = createMockPaddle();
     const controller = new CameraZoomController(camera, paddle);
 
-    expect(controller.isZoomEnabled()).toBe(false);
+    expect(controller.isZoomEnabled()).toBe(true);
     expect(controller.getZoom()).toBe(1.0);
     const center = controller.getCenter();
     expect(center.x).toBe(ARENA_CONFIG.worldWidth / 2);
     expect(center.y).toBe(ARENA_CONFIG.worldHeight / 2);
+  });
+
+  it('can be configured with zoom disabled by default', () => {
+    const camera = createMockCamera();
+    const paddle = createMockPaddle();
+    const controller = new CameraZoomController(camera, paddle, { enabledByDefault: false });
+
+    expect(controller.isZoomEnabled()).toBe(false);
   });
 
   it('toggles zoom state cleanly on demand', () => {
@@ -44,14 +52,59 @@ describe('CameraZoomController', () => {
     const paddle = createMockPaddle();
     const controller = new CameraZoomController(camera, paddle);
 
-    expect(controller.toggle()).toBe(true);
+    // Initial state is true
     expect(controller.isZoomEnabled()).toBe(true);
 
+    // Toggle to false
     expect(controller.toggle()).toBe(false);
     expect(controller.isZoomEnabled()).toBe(false);
 
-    controller.setZoomEnabled(true);
+    // Toggle back to true
+    expect(controller.toggle()).toBe(true);
     expect(controller.isZoomEnabled()).toBe(true);
+
+    controller.setZoomEnabled(false);
+    expect(controller.isZoomEnabled()).toBe(false);
+  });
+
+  it('accurately computes Crete offscreen factor and normalized screen X', () => {
+    const camera = {
+      centerOn: vi.fn(),
+      setZoom: vi.fn(),
+      worldView: {
+        x: 0,
+        y: 0,
+        width: 900,
+        height: 1200,
+        bottom: 1200,
+      },
+      width: 900,
+      height: 1200,
+      zoom: 1.2,
+    } as unknown as Phaser.Cameras.Scene2D.Camera;
+
+    const paddle = {
+      x: 450,
+      y: 1460,
+      halfHeight: 18,
+    } as unknown as CretePaddle;
+
+    const controller = new CameraZoomController(camera, paddle, { enabledByDefault: true });
+
+    // When bottom of camera is at Y=1200 and footer takes space, Crete (Y=1460) is completely offscreen
+    expect(controller.isCreteOffscreen()).toBe(true);
+    expect(controller.getCreteOffscreenFactor()).toBe(1.0);
+    expect(controller.getCreteScreenNormalizedX()).toBeCloseTo(0.5, 2);
+
+    // If paddle moves right to X=720, screen normalized X updates accordingly
+    (paddle as any).x = 720;
+    expect(controller.getCreteScreenNormalizedX()).toBeCloseTo(720 / 900, 2);
+
+    // If camera moves down to frame Crete fully (e.g. bottom at Y=1600)
+    (camera as any).worldView.bottom = 1600;
+    (camera as any).worldView.y = 400;
+    expect(controller.getCreteOffscreenFactor()).toBe(0);
+    expect(controller.isCreteOffscreen()).toBe(false);
   });
 
   it('keeps camera at 1.0x full view when disabled', () => {

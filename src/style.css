@@ -404,6 +404,98 @@ canvas {
   text-shadow: 0 0 8px rgba(67, 201, 240, 0.6);
 }
 
+/* SECTION 2.5: OFF-SCREEN CRETE POSITION BEACON (Visible when camera zooms north) */
+.hud-crete-indicator {
+  position: absolute;
+  bottom: calc(max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px)) + 52px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease-out, visibility 0.22s;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-crete-indicator.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hud-crete-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(8, 18, 38, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35), 0 3px 10px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 4px 10px;
+  color: #38bdf8;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+
+.hud-crete-shape {
+  flex-shrink: 0;
+  color: inherit;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.hud-crete-label {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: inherit;
+  line-height: 1;
+}
+
+.hud-crete-arrow {
+  font-size: 9px;
+  color: inherit;
+  line-height: 1;
+  display: inline-block;
+  animation: hud-crete-bounce 1.2s infinite ease-in-out;
+}
+
+@keyframes hud-crete-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(2.5px);
+  }
+}
+
+/* CHARGED STATE (Teal Energy) */
+.hud-crete-indicator.charged .hud-crete-pill {
+  color: #55E0C3;
+  border-color: rgba(85, 224, 195, 0.8);
+  box-shadow: 0 0 16px rgba(85, 224, 195, 0.6), 0 3px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* ARMED STATE (Golden Power Bounce Ready) */
+.hud-crete-indicator.armed .hud-crete-pill {
+  color: #F5BF62;
+  border-color: rgba(245, 191, 98, 0.9);
+  box-shadow: 0 0 20px rgba(245, 191, 98, 0.75), 0 3px 10px rgba(0, 0, 0, 0.6);
+  animation: hud-armed-beacon-pulse 1s infinite alternate;
+}
+
+@keyframes hud-armed-beacon-pulse {
+  from {
+    filter: drop-shadow(0 0 4px #F5BF62);
+  }
+  to {
+    filter: drop-shadow(0 0 10px #F5BF62);
+  }
+}
+
 /* SECTION 3: BOTTOM HUD (TARGET & STATUS + INTEGRATED POWER METER) */
 .hud-footer {
   width: 100%;

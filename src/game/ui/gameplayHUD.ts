@@ -27,6 +27,8 @@ export class GameplayHUD {
   private targetBonusEl: HTMLElement | null = null;
   private statusTextEl: HTMLElement | null = null;
   private powerFillEl: HTMLElement | null = null;
+  private creteIndicatorEl: HTMLElement | null = null;
+  private creteLabelEl: HTMLElement | null = null;
 
   // Event callbacks
   private onPauseClickCallback?: () => void;
@@ -105,6 +107,17 @@ export class GameplayHUD {
         </div>
       </div>
 
+      <!-- FLOATING OFF-SCREEN CRETE INDICATOR (Visible when camera zooms north) -->
+      <div class="hud-crete-indicator" id="hud-crete-indicator" aria-label="Crete position indicator">
+        <div class="hud-crete-pill">
+          <svg class="hud-crete-shape" viewBox="0 0 32 10" width="22" height="8" aria-hidden="true">
+            <path d="M 1 6 C 3 3, 9 4, 14 2 C 18 1, 23 3, 29 4 C 31 5, 31 7, 29 8 C 25 9, 20 8, 14 9 C 8 10, 4 9, 1 6 Z" fill="currentColor"/>
+          </svg>
+          <span class="hud-crete-label" id="hud-crete-label">CRETE</span>
+          <span class="hud-crete-arrow">▼</span>
+        </div>
+      </div>
+
       <!-- BOTTOM HUD (ROW 2: TARGET & STATUS + SLIM POWER METER) -->
       <div class="hud-footer">
         <!-- ROW 2: TARGET & STATUS (SECONDARY SLIM STRIP WITH INTEGRATED POWER TRACK) -->
@@ -143,6 +156,8 @@ export class GameplayHUD {
     this.targetBonusEl = overlay.querySelector('#hud-target-bonus');
     this.statusTextEl = overlay.querySelector('#hud-status-text');
     this.powerFillEl = overlay.querySelector('#hud-power-fill');
+    this.creteIndicatorEl = overlay.querySelector('#hud-crete-indicator');
+    this.creteLabelEl = overlay.querySelector('#hud-crete-label');
 
     // Wire zoom button click
     if (this.zoomBtn) {
@@ -264,6 +279,56 @@ export class GameplayHUD {
         this.zoomBtn.classList.remove('active');
         this.zoomBtn.setAttribute('aria-pressed', 'false');
       }
+    }
+  }
+
+  /**
+   * Updates the off-screen Crete paddle tracking beacon indicator.
+   *
+   * @param offscreenFactor 0 when fully visible, 1 when fully offscreen.
+   * @param normalizedX Normalized screen horizontal coordinate [0..1] of Crete.
+   * @param isArmed Whether power bounce is currently armed (gold glow).
+   * @param isCharged Whether power bounce is fully charged (teal glow).
+   */
+  public updateCreteIndicator(
+    offscreenFactor: number,
+    normalizedX: number,
+    isArmed = false,
+    isCharged = false,
+  ): void {
+    if (!this.creteIndicatorEl) return;
+
+    if (offscreenFactor <= 0.05) {
+      if (this.creteIndicatorEl.classList.contains('visible')) {
+        this.creteIndicatorEl.classList.remove('visible');
+      }
+      return;
+    }
+
+    if (!this.creteIndicatorEl.classList.contains('visible')) {
+      this.creteIndicatorEl.classList.add('visible');
+    }
+
+    // Set horizontal percentage clamped between 8% and 92%
+    const percent = Math.max(8, Math.min(92, normalizedX * 100));
+    this.creteIndicatorEl.style.left = `${percent.toFixed(2)}%`;
+    this.creteIndicatorEl.style.opacity = `${Math.min(1, offscreenFactor * 1.3).toFixed(2)}`;
+
+    // Power bounce status classes
+    if (isArmed) {
+      this.creteIndicatorEl.classList.add('armed');
+      this.creteIndicatorEl.classList.remove('charged');
+    } else if (isCharged) {
+      this.creteIndicatorEl.classList.add('charged');
+      this.creteIndicatorEl.classList.remove('armed');
+    } else {
+      this.creteIndicatorEl.classList.remove('armed', 'charged');
+    }
+  }
+
+  public setCreteLabel(label: string): void {
+    if (this.creteLabelEl) {
+      this.creteLabelEl.textContent = label;
     }
   }
 

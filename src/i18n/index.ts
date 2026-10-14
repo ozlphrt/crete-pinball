@@ -17,6 +17,7 @@ export type TranslationKey =
   | 'game.paused'
   | 'game.southernDrain'
   | 'game.creteZone'
+  | 'game.crete'
   | 'orientation.rotatePrompt'
   // HUD
   | 'hud.score'
@@ -166,6 +167,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.paused': 'GAME PAUSED',
     'game.southernDrain': 'SOUTHERN DRAIN LINE (Y: 1580)',
     'game.creteZone': 'CRETE DEFENSIVE ZONE (Y: 1460)',
+    'game.crete': 'CRETE',
     'orientation.rotatePrompt': 'Please rotate your device to portrait orientation',
     // HUD
     'hud.score': 'SCORE',
@@ -315,6 +317,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.paused': 'OYUN DURAKLATILDI',
     'game.southernDrain': 'GÜNEY ÇIKIŞ ÇİZGİSİ (Y: 1580)',
     'game.creteZone': 'GİRİT SAVUNMA HATTI (Y: 1460)',
+    'game.crete': 'GİRİT',
     'orientation.rotatePrompt': 'Lütfen cihazınızı dikey konuma çevirin',
     // HUD
     'hud.score': 'SKOR',
@@ -465,6 +468,7 @@ export const TRANSLATIONS: Record<SupportedLocale, Record<TranslationKey, string
     'game.paused': 'ΠΑΥΣΗ ΠΑΙΧΝΙΔΙΟΥ',
     'game.southernDrain': 'ΝΟΤΙΑ ΓΡΑΜΜΗ ΕΞΟΔΟΥ (Y: 1580)',
     'game.creteZone': 'ΑΜΥΝΤΙΚΗ ΖΩΝΗ ΚΡΗΤΗΣ (Y: 1460)',
+    'game.crete': 'ΚΡΗΤΗ',
     'orientation.rotatePrompt':
       'Παρακαλούμε περιστρέψτε τη συσκευή σας σε κατακόρυφο προσανατολισμό',
     // HUD

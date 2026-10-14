@@ -299,6 +299,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
         this.i18n.setLocale(loc);
         this.geographyRenderer.refreshLabels();
         this.tutorialOverlay.updateLocale();
+        this.hud.setCreteLabel(this.i18n.t('game.crete'));
       },
       onReducedMotionChanged: (enabled) => {
         this.effectDirector.setReducedMotion(enabled);
@@ -319,12 +320,14 @@ export class GamePlaceholderScene extends Phaser.Scene {
       },
     });
 
-    // Dynamic Camera Zoom Controller (default: OFF, smooth & seasickness-free tracking)
+    // Dynamic Camera Zoom Controller (default: ON, smooth & seasickness-free tracking)
     this.cameraZoomController = new CameraZoomController(
       this.cameras.main,
       this.cretePaddle,
-      { enabledByDefault: false },
+      { enabledByDefault: true },
     );
+    this.hud.setZoomActive(true);
+    this.hud.setCreteLabel(this.i18n.t('game.crete'));
 
     // Wire HUD buttons
     this.hud.onToggleZoom(() => {
@@ -1170,6 +1173,13 @@ export class GamePlaceholderScene extends Phaser.Scene {
       curState === 'paused',
       p4State,
     );
+
+    // Update Floating Off-Screen Crete Indicator Beacon
+    const offscreenFactor = this.cameraZoomController.getCreteOffscreenFactor();
+    const creteNormX = this.cameraZoomController.getCreteScreenNormalizedX();
+    const isArmed = this.runController.getCreteEnergySystem().isArmed;
+    const isCharged = this.runController.getCreteEnergySystem().charge >= 1.0;
+    this.hud.updateCreteIndicator(offscreenFactor, creteNormX, isArmed, isCharged);
 
     // Update Target Reticle on Island & geography renderer target highlight
     this.updateTargetReticle(target.islandId, time);

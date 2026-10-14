@@ -46,7 +46,7 @@ export class CameraZoomController {
   ) {
     this.camera = camera;
     this.cretePaddle = cretePaddle;
-    this.isEnabled = config.enabledByDefault ?? false;
+    this.isEnabled = config.enabledByDefault ?? true;
     this.maxZoom = config.maxZoom ?? 1.30;
     this.minZoom = config.minZoom ?? 1.0;
     this.marginX = config.marginX ?? 120;
@@ -77,6 +77,54 @@ export class CameraZoomController {
 
   public getCenter(): { x: number; y: number } {
     return { x: this.currentCenterX, y: this.currentCenterY };
+  }
+
+  /**
+   * Returns a factor from 0 (Crete is fully visible on screen above the HUD footer)
+   * to 1 (Crete is completely out of the visible camera viewport).
+   * Incorporates the bottom HUD footer area (~75px on screen) where Crete would be covered.
+   */
+  public getCreteOffscreenFactor(): number {
+    const cam = this.camera;
+    if (!cam) return 0;
+    const worldBottom = cam.worldView
+      ? cam.worldView.bottom
+      : (cam.scrollY ?? 0) + (cam.height ?? 1600) / Math.max(0.1, this.currentZoom);
+    const footerWorldHeight = 75 / Math.max(0.1, this.currentZoom);
+    const effectiveBottom = worldBottom - footerWorldHeight;
+    const creteTop = this.cretePaddle.y - (this.cretePaddle.halfHeight ?? 18);
+    const creteBottom = this.cretePaddle.y + (this.cretePaddle.halfHeight ?? 18);
+
+    if (effectiveBottom >= creteBottom) {
+      return 0; // Fully visible above the footer
+    }
+    if (effectiveBottom <= creteTop) {
+      return 1; // Completely off-screen or behind the footer
+    }
+    return Math.max(0, Math.min(1, (creteBottom - effectiveBottom) / Math.max(1, creteBottom - creteTop)));
+  }
+
+  /**
+   * Returns true if Crete is currently outside or partially obscured by the bottom camera viewport.
+   */
+  public isCreteOffscreen(): boolean {
+    return this.getCreteOffscreenFactor() > 0.05;
+  }
+
+  /**
+   * Computes Crete's normalized horizontal position [0..1] within the current visible camera frame.
+   * Clamped so the UI indicator never overflows past screen edges.
+   */
+  public getCreteScreenNormalizedX(): number {
+    const cam = this.camera;
+    if (!cam) return 0.5;
+    const worldViewX = cam.worldView ? cam.worldView.x : (cam.scrollX ?? 0);
+    const worldViewWidth = cam.worldView
+      ? cam.worldView.width
+      : (cam.width ?? 900) / Math.max(0.1, this.currentZoom);
+    if (worldViewWidth <= 0) return 0.5;
+    const normX = (this.cretePaddle.x - worldViewX) / worldViewWidth;
+    return Math.max(0.08, Math.min(0.92, normX));
   }
 
   public update(deltaSeconds: number, activeBalls: readonly BallBody[]): void {
@@ -118,10 +166,10 @@ export class CameraZoomController {
 
     // Dynamic zoom active
     if (activeBalls.length === 0) {
-      // Default to slightly elevated overview if waiting for launch
+      // Full overview framing both Crete and northern spawn before launch
       const targetCenterX = W / 2;
-      const targetCenterY = H * 0.48;
-      const targetZoom = 1.15;
+      const targetCenterY = H / 2;
+      const targetZoom = 1.0;
 
       const pLerp = 1 - Math.exp(-this.posLambda * dt);
       const zLerp = 1 - Math.exp(-this.zoomLambda * dt);
