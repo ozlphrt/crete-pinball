@@ -42,8 +42,8 @@ export class InputAdapter {
     const worldPoint = this.transformer.screenToWorld(this.lastScreenPos);
     this.lastWorldPos = worldPoint;
 
-    // Check if in lower control zone (world Y > 1000)
-    this.isLowerControlZone = worldPoint.y >= 1000;
+    // Full-screen control: player can touch anywhere on screen to steer Crete
+    this.isLowerControlZone = true;
 
     const now = Date.now();
     if (now - this.lastTapTimestamp < this.doubleTapThresholdMs) {
@@ -54,9 +54,8 @@ export class InputAdapter {
       this.lastTapTimestamp = now;
     }
 
-    if (this.isLowerControlZone) {
-      this.targetPaddleX = Math.max(0, Math.min(ARENA_CONFIG.worldWidth, worldPoint.x));
-    }
+    // Direct tracking: immediately position Crete horizontally to follow touch
+    this.targetPaddleX = Math.max(0, Math.min(ARENA_CONFIG.worldWidth, worldPoint.x));
   }
 
   public handlePointerMove(screenX: number, screenY: number): void {
@@ -64,7 +63,8 @@ export class InputAdapter {
     const worldPoint = this.transformer.screenToWorld(this.lastScreenPos);
     this.lastWorldPos = worldPoint;
 
-    if (this.isPointerDown && this.isLowerControlZone) {
+    if (this.isPointerDown) {
+      // Full-screen dragging: dragging left or right anywhere on screen steers Crete
       this.targetPaddleX = Math.max(0, Math.min(ARENA_CONFIG.worldWidth, worldPoint.x));
     }
   }

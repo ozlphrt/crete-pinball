@@ -607,12 +607,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
     // Start northern ball drop into active play
     this.startNorthernBallDrop();
 
-    // Pointer Listeners
+    // Pointer Listeners (full-screen touch & drag control)
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.y < GameplayHUD.HUD_HEIGHT) return; // Ignore HUD interactions
       this.inputAdapter.handlePointerDown(pointer.x, pointer.y);
-      this.pointerMarker.setPosition(pointer.x, pointer.y);
-      this.pointerMarker.setVisible(true);
 
       // Skip countdown and drop immediately if in ready state
       if (this.stateManager.getState() === 'ready') {
@@ -622,14 +620,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       this.inputAdapter.handlePointerMove(pointer.x, pointer.y);
-      if (pointer.isDown) {
-        this.pointerMarker.setPosition(pointer.x, pointer.y);
-      }
     });
 
     this.input.on('pointerup', () => {
       this.inputAdapter.handlePointerUp();
-      this.pointerMarker.setVisible(false);
     });
 
     // Forward container-level touch events from outside canvas (e.g., extended ocean area below Crete)
@@ -656,7 +650,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
               this.triggerImmediateDropIfReady();
             }
           } else if (type === 'move') {
-            if (e.buttons > 0) {
+            if (e.buttons > 0 || e.pointerType === 'touch') {
               this.inputAdapter.handlePointerMove(worldX, worldY);
             }
           } else if (type === 'up') {
