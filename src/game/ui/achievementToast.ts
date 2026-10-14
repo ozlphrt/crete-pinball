@@ -152,7 +152,7 @@ export class AchievementToast {
 
     let itemsHtml = '';
     if (!isMulti) {
-      const item = items[0];
+      const item = items[0] ?? { id: '', title: '', description: '', icon: '🏆' };
       itemsHtml = `
         <div style="width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle, rgba(241, 224, 90, 0.25) 0%, rgba(241, 224, 90, 0.05) 70%, transparent 100%); display: flex; align-items: center; justify-content: center; font-size: 34px; line-height: 1; border: 1px solid rgba(241, 224, 90, 0.3);">
           ${item.icon}

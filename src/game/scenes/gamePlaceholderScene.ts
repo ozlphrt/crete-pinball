@@ -80,6 +80,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
   private checkpointService!: SessionCheckpointService;
   private resumeCountdown!: ResumeCountdown;
   private targetReticleGraphics!: Phaser.GameObjects.Graphics;
+  private targetBadgeText!: Phaser.GameObjects.Text;
   private trajectoryGraphics!: Phaser.GameObjects.Graphics;
   private specialIslandFlashGraphics!: Phaser.GameObjects.Graphics;
   private announcementText!: Phaser.GameObjects.Text;
@@ -193,7 +194,8 @@ export class GamePlaceholderScene extends Phaser.Scene {
     // Graphics layers for Trajectory & Island Special Flash
     this.trajectoryGraphics = this.add.graphics().setDepth(12);
     this.specialIslandFlashGraphics = this.add.graphics().setDepth(14);
-    this.targetReticleGraphics = this.add.graphics().setDepth(15);
+    // Clearly visible green target sign reticle graphics (depth 35 above terrain & coastlines)
+    this.targetReticleGraphics = this.add.graphics().setDepth(35);
 
     // Phase 03 & 04 Run Controller & Storage
     this.runController = new RunController(this.storageAdapter, this.difficulty, this.stateManager);
@@ -303,6 +305,9 @@ export class GamePlaceholderScene extends Phaser.Scene {
         this.geographyRenderer.refreshLabels();
         this.tutorialOverlay.updateLocale();
         this.hud.setCreteLabel(this.i18n.t('game.crete'));
+        if (this.targetBadgeText) {
+          this.targetBadgeText.setText(`🎯 ${this.i18n.t('hud.target').toUpperCase()}`);
+        }
       },
       onReducedMotionChanged: (enabled) => {
         this.effectDirector.setReducedMotion(enabled);
@@ -362,6 +367,21 @@ export class GamePlaceholderScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(210)
       .setAlpha(0);
+
+    // Floating Target Sign badge text above the active target island
+    this.targetBadgeText = this.add
+      .text(0, 0, `🎯 ${this.i18n.t('hud.target').toUpperCase()}`, {
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: '#34d399',
+        stroke: '#021a12',
+        strokeThickness: 4,
+        align: 'center',
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(37)
+      .setVisible(false);
 
     // Automatically pause and checkpoint simulation state when genuinely backgrounded/hidden
     const handleVisibilityHidden = (): void => {
@@ -1375,25 +1395,155 @@ export class GamePlaceholderScene extends Phaser.Scene {
     const g = this.targetReticleGraphics;
     g.clear();
 
+    if (!targetIslandId) {
+      if (this.targetBadgeText) this.targetBadgeText.setVisible(false);
+      return;
+    }
+
     const features = getStaticFeatures();
     const feat = features.find((f) => f.id === targetIslandId);
-    if (!feat) return;
+    if (!feat) {
+      if (this.targetBadgeText) this.targetBadgeText.setVisible(false);
+      return;
+    }
 
     const cx = feat.centroid.x;
     const cy = feat.centroid.y;
 
-    const pulse = (Math.sin(time * 0.005) + 1) * 0.5;
-    const radius = 24 + pulse * 5;
+    // Dynamic sizing based on island boundary
+    const w = feat.boundingBox.maxX - feat.boundingBox.minX;
+    const h = feat.boundingBox.maxY - feat.boundingBox.minY;
+    const baseRadius = Math.max(26, Math.min(52, Math.max(w, h) * 0.58));
 
-    // Subtle glowing beacon halo around active target island
-    g.fillStyle(0x10b981, 0.04 + pulse * 0.04);
-    g.fillCircle(cx, cy, radius);
+    // Breathing pulse rhythm
+    const pulse = (Math.sin(time * 0.004) + 1) * 0.5;
+    const r = baseRadius + pulse * 4;
+    const innerR = r * 0.52;
 
-    g.lineStyle(1.2, 0x10b981, 0.40);
-    g.strokeCircle(cx, cy, radius);
+    // --- 1. Sonar Radar Ping (Expanding Pulse Ring) ---
+    const pingProgress = (time % 1600) / 1600;
+    const pingR = baseRadius * 0.35 + pingProgress * (baseRadius * 1.05);
+    const pingAlpha = (1 - pingProgress) * 0.70;
+    g.lineStyle(2.4, 0x34d399, pingAlpha);
+    g.strokeCircle(cx, cy, pingR);
 
-    g.fillStyle(0x34d399, 0.65);
-    g.fillCircle(cx, cy, 2.0);
+    // --- 2. Outer Target Ring ---
+    // Translucent neon emerald fill inside target area
+    g.fillStyle(0x10b981, 0.12 + pulse * 0.06);
+    g.fillCircle(cx, cy, r);
+
+    // Dark underlay stroke for guaranteed high contrast on any terrain
+    g.lineStyle(6.0, 0x021a12, 0.95);
+    g.strokeCircle(cx, cy, r);
+    // Neon emerald outer ring
+    g.lineStyle(3.0, 0x10b981, 1.0);
+    g.strokeCircle(cx, cy, r);
+
+    // --- 3. Concentric Inner Bullseye Ring ---
+    g.fillStyle(0x34d399, 0.18 + pulse * 0.08);
+    g.fillCircle(cx, cy, innerR);
+
+    g.lineStyle(4.5, 0x021a12, 0.95);
+    g.strokeCircle(cx, cy, innerR);
+    g.lineStyle(2.4, 0x34d399, 1.0);
+    g.strokeCircle(cx, cy, innerR);
+
+    // --- 4. Tactical Crosshairs (N, S, E, W with center gap) ---
+    const innerGap = Math.max(10, r * 0.28);
+    const outerReach = r + 12;
+
+    // Dark underlay crosshair lines
+    g.lineStyle(5.5, 0x021a12, 0.95);
+    g.lineBetween(cx, cy - outerReach, cx, cy - innerGap);
+    g.lineBetween(cx, cy + innerGap, cx, cy + outerReach);
+    g.lineBetween(cx - outerReach, cy, cx - innerGap, cy);
+    g.lineBetween(cx + innerGap, cy, cx + outerReach, cy);
+
+    // Vivid green crosshair lines
+    g.lineStyle(2.6, 0x10b981, 1.0);
+    g.lineBetween(cx, cy - outerReach, cx, cy - innerGap);
+    g.lineBetween(cx, cy + innerGap, cx, cy + outerReach);
+    g.lineBetween(cx - outerReach, cy, cx - innerGap, cy);
+    g.lineBetween(cx + innerGap, cy, cx + outerReach, cy);
+
+    // Tactical crosshair end-notches
+    const tick = 5.0;
+    g.lineStyle(5.0, 0x021a12, 0.95);
+    g.lineBetween(cx - tick, cy - outerReach, cx + tick, cy - outerReach);
+    g.lineBetween(cx - tick, cy + outerReach, cx + tick, cy + outerReach);
+    g.lineBetween(cx - outerReach, cy - tick, cx - outerReach, cy + tick);
+    g.lineBetween(cx + outerReach, cy - tick, cx + outerReach, cy + tick);
+
+    g.lineStyle(2.4, 0x34d399, 1.0);
+    g.lineBetween(cx - tick, cy - outerReach, cx + tick, cy - outerReach);
+    g.lineBetween(cx - tick, cy + outerReach, cx + tick, cy + outerReach);
+    g.lineBetween(cx - outerReach, cy - tick, cx - outerReach, cy + tick);
+    g.lineBetween(cx + outerReach, cy - tick, cx + outerReach, cy + tick);
+
+    // --- 5. Viewfinder Corner Brackets ⌜ ⌝ ⌞ ⌟ ---
+    const boxDist = r + 7;
+    const arm = Math.max(10, r * 0.28);
+
+    // Dark underlays for corner brackets
+    g.lineStyle(5.5, 0x021a12, 0.95);
+    // Top-Left ⌜
+    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist + arm, cy - boxDist);
+    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist, cy - boxDist + arm);
+    // Top-Right ⌝
+    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist - arm, cy - boxDist);
+    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist, cy - boxDist + arm);
+    // Bottom-Left ⌞
+    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist + arm, cy + boxDist);
+    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist, cy + boxDist - arm);
+    // Bottom-Right ⌟
+    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist - arm, cy + boxDist);
+    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist, cy + boxDist - arm);
+
+    // Bright mint-green corner bracket strokes
+    g.lineStyle(2.6, 0x34d399, 1.0);
+    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist + arm, cy - boxDist);
+    g.lineBetween(cx - boxDist, cy - boxDist, cx - boxDist, cy - boxDist + arm);
+    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist - arm, cy - boxDist);
+    g.lineBetween(cx + boxDist, cy - boxDist, cx + boxDist, cy - boxDist + arm);
+    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist + arm, cy + boxDist);
+    g.lineBetween(cx - boxDist, cy + boxDist, cx - boxDist, cy + boxDist - arm);
+    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist - arm, cy + boxDist);
+    g.lineBetween(cx + boxDist, cy + boxDist, cx + boxDist, cy + boxDist - arm);
+
+    // --- 6. Center Bullseye Dot ---
+    g.fillStyle(0x021a12, 0.95);
+    g.fillCircle(cx, cy, 7.0);
+    g.fillStyle(0x10b981, 1.0);
+    g.fillCircle(cx, cy, 5.2);
+    g.fillStyle(0xffffff, 1.0);
+    g.fillCircle(cx, cy, 2.2);
+
+    // --- 7. Floating Target Sign Badge & Downward Target Chevron ---
+    const bounce = Math.sin(time * 0.006) * 3;
+    const arrowTipY = cy - r - 12 + bounce;
+
+    // Tactical downward pointing triangle chevron ▼
+    g.fillStyle(0x021a12, 0.95);
+    g.fillTriangle(cx - 9, arrowTipY - 8, cx + 9, arrowTipY - 8, cx, arrowTipY + 4);
+    g.fillStyle(0x10b981, 1.0);
+    g.fillTriangle(cx - 7, arrowTipY - 7, cx + 7, arrowTipY - 7, cx, arrowTipY + 2);
+
+    if (this.targetBadgeText) {
+      const badgeW = this.targetBadgeText.width + 18;
+      const badgeH = this.targetBadgeText.height + 8;
+      const badgeX = cx - badgeW / 2;
+      const badgeY = arrowTipY - 10 - badgeH;
+
+      // High contrast dark pill background
+      g.fillStyle(0x021a12, 0.94);
+      g.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, 6);
+      // Vivid emerald outline on badge pill
+      g.lineStyle(2.0, 0x10b981, 1.0);
+      g.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 6);
+
+      this.targetBadgeText.setPosition(cx, badgeY + badgeH / 2);
+      this.targetBadgeText.setVisible(true);
+    }
   }
 
   private findHoveredIsland(worldX: number, worldY: number): IslandFeature | null {

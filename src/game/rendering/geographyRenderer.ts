@@ -510,16 +510,31 @@ export class GeographyRenderer {
   }
 
   private updateTargetLabelStyles(): void {
+    const features = getStaticFeatures();
     for (const label of this.labelObjects) {
       const featId = (label as unknown as { featureId?: string }).featureId;
       const isTarget = featId === this.currentTargetIslandId;
+      const feat = features.find((f) => f.id === featId);
+      const cx = feat ? feat.centroid.x : label.x;
+      const cy = feat ? feat.centroid.y : label.y;
 
       if (isTarget) {
-        label.setColor('#fbbf24');
-        label.setFontSize(21);
+        label.setColor('#34d399');
+        label.setStroke('#021a12', 5);
+        label.setFontSize(22);
+        label.setDepth(36);
+        const h = feat ? feat.boundingBox.maxY - feat.boundingBox.minY : 30;
+        const w = feat ? feat.boundingBox.maxX - feat.boundingBox.minX : 30;
+        const r = Math.max(26, Math.min(52, Math.max(w, h) * 0.58));
+        label.setPosition(cx, cy + r + 28);
+        label.setVisible(true);
       } else {
         label.setColor('#cbe4ff');
+        label.setStroke('#030712', 4);
         label.setFontSize(18);
+        label.setDepth(6);
+        label.setPosition(cx, cy - 14);
+        label.setVisible(!!this.options.showLabels);
       }
     }
 
@@ -528,11 +543,15 @@ export class GeographyRenderer {
       const isTarget = featId === this.currentTargetIslandId;
 
       if (isTarget) {
-        dot.setFillStyle(0xfbbf24, 0.95);
-        dot.setRadius(4);
+        dot.setFillStyle(0x10b981, 1.0);
+        dot.setRadius(5);
+        dot.setDepth(36);
+        dot.setVisible(true);
       } else {
         dot.setFillStyle(0x38bdf8, 0.75);
         dot.setRadius(2.5);
+        dot.setDepth(5);
+        dot.setVisible(!!this.options.showLabels);
       }
     }
   }
@@ -993,12 +1012,16 @@ export class GeographyRenderer {
   }
 
   private updateLabelsVisibility(): void {
-    const visible = !!this.options.showLabels;
+    const showAll = !!this.options.showLabels;
     for (const lbl of this.labelObjects) {
-      lbl.setVisible(visible);
+      const featId = (lbl as unknown as { featureId?: string }).featureId;
+      const isTarget = featId === this.currentTargetIslandId;
+      lbl.setVisible(isTarget || showAll);
     }
     for (const dot of this.anchorDots) {
-      dot.setVisible(visible);
+      const featId = (dot as unknown as { featureId?: string }).featureId;
+      const isTarget = featId === this.currentTargetIslandId;
+      dot.setVisible(isTarget || showAll);
     }
   }
 
