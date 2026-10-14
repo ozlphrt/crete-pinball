@@ -952,16 +952,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
       this.physicsWorld.setPaused(true);
     }
 
-    const resumeLabel = this.i18n.t('game.resume').toUpperCase() + ' ▶';
-    const resumingTemplate = (s: number) => {
-      const template = this.i18n.t('game.resumingIn');
-      return template.replace('{s}', s.toString());
-    };
+    const continueLabel = (this.i18n.t('game.continue') || 'CONTINUE').toUpperCase() + ' ▶';
 
     AchievementToast.show(payload, {
-      durationSeconds: 3,
-      resumeLabel,
-      resumingTemplate,
+      resumeLabel: continueLabel,
       onDismiss: () => {
         if (wasPlaying && this.stateManager.getState() === 'paused') {
           this.runController.resumeImmediate();

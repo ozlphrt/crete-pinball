@@ -5,6 +5,11 @@ All notable changes to the Crete Pinball project will be documented in this file
 ## [1.0.0] — 2026-10-14
 
 ### Added
+- **User-Driven Achievement Modal & Continue Action**:
+  - Replaced the automatic 3-second countdown timer and progress bar on achievement unlock modals with a user-driven "CONTINUE ▶" button.
+  - The modal stays comfortably open while the game remains paused, allowing players to read unlocked achievements and awards without being rushed.
+  - Supports pressing the prominent golden `CONTINUE ▶` button, clicking the backdrop, or pressing `Space` / `Enter` / `Escape` on desktop keyboards to resume play.
+  - Added localized `game.continue` string across English (`Continue`), Turkish (`Devam Et`), and Greek (`Συνέχεια`).
 - **On-Map HUD Information & Bottom Panel Removal**:
   - Removed the bottom footer HUD panel (`.hud-footer`) entirely, expanding the Aegean and Libyan sea map seamlessly to the edge of the viewport.
   - **Positive Achievement Star Sign for Bonus Islands**:

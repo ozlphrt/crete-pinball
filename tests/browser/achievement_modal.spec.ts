@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Achievement Unlock Modal & 3-Second Game Pause', () => {
-  test('pauses game when achievement is unlocked, shows readable modal with 3s countdown, and resumes', async ({
+test.describe('Achievement Unlock Modal & User-Driven Continue', () => {
+  test('pauses game when achievement is unlocked, shows readable modal with Continue button, and resumes on click', async ({
     page,
   }) => {
     const errorLogs: string[] = [];
@@ -24,10 +24,13 @@ test.describe('Achievement Unlock Modal & 3-Second Game Pause', () => {
 
     const card = page.locator('#achievement-unlock-card');
     await expect(card).toContainText(/ACHIEVEMENT/);
-    await expect(card).toContainText(/Resuming in/);
+
+    // Verify there is NO automatic countdown text
+    await expect(card).not.toContainText(/Resuming in/);
 
     const resumeBtn = page.locator('#achievement-resume-btn');
     await expect(resumeBtn).toBeVisible();
+    await expect(resumeBtn).toContainText(/CONTINUE/);
 
     // Capture screenshot of the achievement modal
     await page.screenshot({
@@ -35,7 +38,7 @@ test.describe('Achievement Unlock Modal & 3-Second Game Pause', () => {
       fullPage: true,
     });
 
-    // Click resume button to immediately resume
+    // Click continue button to resume
     await resumeBtn.click();
 
     // Verify modal dismisses and gameplay resumes
@@ -44,7 +47,7 @@ test.describe('Achievement Unlock Modal & 3-Second Game Pause', () => {
     expect(errorLogs).toEqual([]);
   });
 
-  test('automatically resumes after 3 seconds if user does not click resume', async ({ page }) => {
+  test('keeps modal open without 3-second auto-dismiss, allowing user to continue at their own pace', async ({ page }) => {
     await page.goto('/');
     const canvas = page.locator('canvas');
     await expect(canvas).toBeVisible({ timeout: 10000 });
@@ -57,7 +60,13 @@ test.describe('Achievement Unlock Modal & 3-Second Game Pause', () => {
     const modalBackdrop = page.locator('#achievement-unlock-backdrop');
     await expect(modalBackdrop).toBeVisible({ timeout: 10000 });
 
-    // Wait for auto-resume timer (3 seconds) to dismiss modal
-    await expect(modalBackdrop).not.toBeVisible({ timeout: 4500 });
+    // Wait 3.5 seconds: verify modal is STILL open and has NOT auto-dismissed
+    await page.waitForTimeout(3500);
+    await expect(modalBackdrop).toBeVisible();
+
+    // Press Space or click Continue to resume when user decides
+    const resumeBtn = page.locator('#achievement-resume-btn');
+    await resumeBtn.click();
+    await expect(modalBackdrop).not.toBeVisible({ timeout: 3000 });
   });
 });
