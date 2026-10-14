@@ -5,6 +5,11 @@ All notable changes to the Crete Pinball project will be documented in this file
 ## [1.0.0] — 2026-10-14
 
 ### Added
+- **On-Map HUD Information & Bottom Panel Removal**:
+  - Removed the bottom footer HUD panel (`.hud-footer`) entirely, expanding the Aegean and Libyan sea map seamlessly to the edge of the viewport.
+  - **Target Island & Bonus Display**: Rendered directly above the target island via a tactical green reticle, directional chevron, and high-contrast pill badge (`🎯 TARGET: <NAME> · +<POINTS>`), with horizontal boundary clamping to prevent off-screen clipping.
+  - **Crete Paddle Energy Meter**: Moved directly into the map attached to the Crete paddle in the Libyan Sea (`creteBaselineY + 36`), tracking horizontal paddle movement with a dynamic neon cyan/amber energy bar and a high-contrast state badge (`⚡ READY`, `⚡ ARMED`, or charge percentage).
+  - **Floating Tactical Status Pill**: Temporary active events (e.g. `⚡ 3-BALL MULTIBALL · 5s`, `🌬️ MELTEMI · 12s`, `⚡ POWER BOUNCE ARMED`) float cleanly below the top stats header with zero screen obstruction during normal play.
 - **Introductory Crete Paddle Oscillation Affordance**:
   - Crete gently sways horizontally ($\pm 50\,\text{px}$, $\sim 2.4\,\text{s}$ period) on startup and round reset to intuitively communicate that Crete is the movable paddle.
   - Pulsing luminescence on flanking chevrons (`«` and `»`) to highlight horizontal control affordance.

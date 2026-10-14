@@ -1,15 +1,17 @@
 import { test, expect } from '@playwright/test';
 import * as path from 'path';
-import * as fs from 'fs';
 
-test.describe('HUD Footer & Power Meter Layout Verification', () => {
-  test('captures footer layout in charged state with multiball', async ({ page }) => {
+test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
+  test('verifies bottom panel is completely removed from DOM and info renders on map', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.waitForSelector('canvas');
-    await page.waitForSelector('.hud-footer');
 
-    // Set state: Kythira target, multiball 5s, full power charge
+    // 1. Verify bottom footer panel does NOT exist
+    const footerCount = await page.locator('.hud-footer').count();
+    expect(footerCount).toBe(0);
+
+    // 2. Set state: Kythira target, multiball 5s, full power charge
     await page.evaluate(() => {
       const game = (window as unknown as { game?: any }).game;
       if (!game) throw new Error('game not found');
@@ -18,59 +20,65 @@ test.describe('HUD Footer & Power Meter Layout Verification', () => {
 
       const rc = scene['runController'];
       if (rc) {
-        rc['targetSystem']['target'] = {
-          islandId: 'kythira',
+        rc['targetSystem']['currentBonusTarget'] = {
+          islandId: 'island-kythira',
           name: 'Kythira',
           bonusPoints: 500,
           timerSeconds: 15,
         };
         const mb = rc.getMultiballSystem();
-        mb['active'] = true;
-        mb['remainingDurationMs'] = 5000;
+        (mb as any)['active'] = true;
+        (mb as any)['remainingDurationMs'] = 5000;
 
         const energy = rc.getCreteEnergySystem();
         energy['currentCharge'] = 1.0;
       }
     });
 
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(400);
 
-    const outDir = path.resolve('docs/screenshots');
-    if (!fs.existsSync(outDir)) {
-      fs.mkdirSync(outDir, { recursive: true });
-    }
-
-    const footerEl = page.locator('.hud-footer');
-    await footerEl.screenshot({
-      path: path.join(outDir, 'hud_footer_charged_multiball.png'),
-    });
-
-    // Verify alignment
-    const metrics = await page.evaluate(() => {
-      const targetName = document.querySelector('#hud-target-name')?.getBoundingClientRect();
-      const statusText = document.querySelector('#hud-status-text')?.getBoundingClientRect();
-      const row2 = document.querySelector('.hud-row-2')?.getBoundingClientRect();
-      const powerMeter = document.querySelector('.hud-power-meter')?.getBoundingClientRect();
-
+    // 3. Verify on-map representations
+    const onMapInfo = await page.evaluate(() => {
+      const game = (window as any).game;
+      const scene = game.scene.getScene('GamePlaceholderScene');
       return {
-        targetNameMid: targetName ? (targetName.top + targetName.bottom) / 2 : 0,
-        statusTextMid: statusText ? (statusText.top + statusText.bottom) / 2 : 0,
-        row2Width: row2?.width ?? 0,
-        powerMeterWidth: powerMeter?.width ?? 0,
+        targetBadgeText: scene.targetBadgeText?.text ?? '',
+        targetBadgeVisible: scene.targetBadgeText?.visible ?? false,
+        cretePowerText: scene.cretePowerText?.text ?? '',
+        cretePowerVisible: scene.cretePowerText?.visible ?? false,
+        mapStatusText: scene.mapStatusBadgeText?.text ?? '',
+        mapStatusVisible: scene.mapStatusBadgeText?.visible ?? false,
       };
     });
 
-    // Check vertical alignment: midpoints should be virtually identical
-    expect(Math.abs(metrics.targetNameMid - metrics.statusTextMid)).toBeLessThanOrEqual(2);
-    // Power meter spans full width of row2 (minus borders)
-    expect(metrics.powerMeterWidth).toBeGreaterThanOrEqual(metrics.row2Width - 3);
+    expect(onMapInfo.targetBadgeVisible).toBe(true);
+    expect(onMapInfo.targetBadgeText).toContain('TARGET');
+    expect(onMapInfo.targetBadgeText).toContain('KYTHIRA');
+    expect(onMapInfo.targetBadgeText).toContain('+500');
+
+    expect(onMapInfo.cretePowerVisible).toBe(true);
+    expect(onMapInfo.cretePowerText).toBe('⚡ READY');
+
+    expect(onMapInfo.mapStatusVisible).toBe(true);
+    expect(onMapInfo.mapStatusText).toContain('3-BALL MULTIBALL');
+
+    // 4. If achievement modal(s) opened, dismiss them so map is clearly visible
+    while (await page.locator('#achievement-resume-btn').isVisible()) {
+      await page.locator('#achievement-resume-btn').click();
+      await page.waitForTimeout(200);
+    }
+
+    // 5. Capture screenshot showing full map without bottom panel and with on-map info
+    const outDir = path.resolve('C:/Users/ozalp/.gemini/antigravity-ide/brain/6cde20b9-3b91-4453-a110-b602f8618cb6');
+    await page.screenshot({
+      path: path.join(outDir, 'on_map_hud_no_bottom_panel.png'),
+    });
   });
 
-  test('captures footer layout in partial charge state (50%)', async ({ page }) => {
+  test('verifies on-map Crete power meter when charging (55%)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.waitForSelector('canvas');
-    await page.waitForSelector('.hud-footer');
 
     await page.evaluate(() => {
       const game = (window as unknown as { game?: any }).game;
@@ -81,7 +89,7 @@ test.describe('HUD Footer & Power Meter Layout Verification', () => {
       const rc = scene['runController'];
       if (rc) {
         rc['targetSystem']['target'] = {
-          islandId: 'naxos',
+          islandId: 'island-naxos',
           name: 'Naxos',
           bonusPoints: 500,
           timerSeconds: 15,
@@ -93,61 +101,16 @@ test.describe('HUD Footer & Power Meter Layout Verification', () => {
 
     await page.waitForTimeout(300);
 
-    const outDir = path.resolve('docs/screenshots');
-    const footerEl = page.locator('.hud-footer');
-    await footerEl.screenshot({
-      path: path.join(outDir, 'hud_footer_partial_charge.png'),
-    });
-  });
-
-  test('renders long target island name with POWER READY without clipping or truncation', async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 740 });
-    await page.goto('/');
-    await page.waitForSelector('canvas');
-    await page.waitForSelector('.hud-footer');
-
-    await page.evaluate(() => {
-      const game = (window as unknown as { game?: any }).game;
-      if (!game) throw new Error('game not found');
+    const powerInfo = await page.evaluate(() => {
+      const game = (window as any).game;
       const scene = game.scene.getScene('GamePlaceholderScene');
-      if (!scene) throw new Error('GamePlaceholderScene not found');
-
-      const hud = scene['hud'];
-      if (hud) {
-        hud.update(
-          12500,
-          1,
-          3,
-          'Astypalaia',
-          500,
-          'normal',
-          false,
-          {
-            powerCharge: 1.0,
-            isPowerArmed: false,
-            weatherType: 'none',
-            weatherDurationRemainingSeconds: 0,
-            isMultiballActive: false,
-            multiballDurationRemainingSeconds: 0,
-          }
-        );
-      }
+      return {
+        powerText: scene.cretePowerText?.text ?? '',
+        powerVisible: scene.cretePowerText?.visible ?? false,
+      };
     });
 
-    await page.waitForTimeout(300);
-
-    const outDir = path.resolve('docs/screenshots');
-    const footerEl = page.locator('.hud-footer');
-    await footerEl.screenshot({
-      path: path.join(outDir, 'hud_footer_astypalaia_power_ready.png'),
-    });
-
-    const isTruncated = await page.evaluate(() => {
-      const el = document.querySelector('#hud-target-name');
-      if (!el) return true;
-      return el.scrollWidth > el.clientWidth;
-    });
-
-    expect(isTruncated).toBe(false);
+    expect(powerInfo.powerVisible).toBe(true);
+    expect(powerInfo.powerText).toBe('55%');
   });
 });

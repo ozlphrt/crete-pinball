@@ -81,6 +81,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
   private resumeCountdown!: ResumeCountdown;
   private targetReticleGraphics!: Phaser.GameObjects.Graphics;
   private targetBadgeText!: Phaser.GameObjects.Text;
+  private cretePowerGraphics!: Phaser.GameObjects.Graphics;
+  private cretePowerText!: Phaser.GameObjects.Text;
+  private mapStatusBadgeGraphics!: Phaser.GameObjects.Graphics;
+  private mapStatusBadgeText!: Phaser.GameObjects.Text;
   private trajectoryGraphics!: Phaser.GameObjects.Graphics;
   private specialIslandFlashGraphics!: Phaser.GameObjects.Graphics;
   private announcementText!: Phaser.GameObjects.Text;
@@ -370,7 +374,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
     // Floating Target Sign badge text above the active target island
     this.targetBadgeText = this.add
-      .text(0, 0, `🎯 ${this.i18n.t('hud.target').toUpperCase()}`, {
+      .text(0, 0, `🎯 ${this.i18n.t('hud.target').toUpperCase()} · +500`, {
         fontFamily: 'system-ui, -apple-system, sans-serif',
         fontSize: '16px',
         fontStyle: 'bold',
@@ -381,6 +385,35 @@ export class GamePlaceholderScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0.5)
       .setDepth(37)
+      .setVisible(false);
+
+    // On-Map Crete Power Meter (directly on paddle, replacing bottom panel)
+    this.cretePowerGraphics = this.add.graphics().setDepth(14);
+    this.cretePowerText = this.add
+      .text(0, 0, '', {
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: '#38bdf8',
+        stroke: '#020617',
+        strokeThickness: 3.5,
+        align: 'center',
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(15)
+      .setVisible(false);
+
+    // On-Map Tactical Status Badge (replaces bottom panel status text, floats below top stats)
+    this.mapStatusBadgeGraphics = this.add.graphics().setDepth(38);
+    this.mapStatusBadgeText = this.add
+      .text(0, 0, '', {
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '20px',
+        fontStyle: 'bold',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(39)
       .setVisible(false);
 
     // Automatically pause and checkpoint simulation state when genuinely backgrounded/hidden
@@ -1239,8 +1272,12 @@ export class GamePlaceholderScene extends Phaser.Scene {
     this.hud.updateCreteIndicator(offscreenFactor, creteNormX, isArmed, isCharged);
 
     // Update Target Reticle on Island & geography renderer target highlight
-    this.updateTargetReticle(target.islandId, time);
+    this.updateTargetReticle(target.islandId, target.bonusPoints, time);
     this.geographyRenderer.setTargetIsland(target.islandId);
+
+    // Update On-Map Crete Power Meter and Map Status Badge
+    this.updateCreteOnMapPowerMeter(p4State, time);
+    this.updateMapStatusBadge(p4State);
 
     // Intent and state feedback message (developer diagnostic mode only)
     const primaryBall = this.physicsWorld.getBall();
@@ -1391,7 +1428,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
     }
   }
 
-  private updateTargetReticle(targetIslandId: string, time: number): void {
+  private updateTargetReticle(targetIslandId: string, bonusPoints: number, time: number): void {
     const g = this.targetReticleGraphics;
     g.clear();
 
@@ -1529,10 +1566,19 @@ export class GamePlaceholderScene extends Phaser.Scene {
     g.fillTriangle(cx - 7, arrowTipY - 7, cx + 7, arrowTipY - 7, cx, arrowTipY + 2);
 
     if (this.targetBadgeText) {
+      const locale = this.i18n.getLocale();
+      const islandName = feat.names[locale] ?? feat.names.en ?? targetIslandId.replace(/^island-/, '');
+      const targetLabel = this.i18n.t('hud.target').toUpperCase();
+      this.targetBadgeText.setText(`🎯 ${targetLabel}: ${islandName.toUpperCase()} · +${bonusPoints}`);
+
       const badgeW = this.targetBadgeText.width + 18;
       const badgeH = this.targetBadgeText.height + 8;
-      const badgeX = cx - badgeW / 2;
+      let badgeX = cx - badgeW / 2;
       const badgeY = arrowTipY - 10 - badgeH;
+
+      // Keep badge within world bounds horizontally
+      if (badgeX < 14) badgeX = 14;
+      if (badgeX + badgeW > ARENA_CONFIG.worldWidth - 14) badgeX = ARENA_CONFIG.worldWidth - 14 - badgeW;
 
       // High contrast dark pill background
       g.fillStyle(0x021a12, 0.94);
@@ -1541,8 +1587,136 @@ export class GamePlaceholderScene extends Phaser.Scene {
       g.lineStyle(2.0, 0x10b981, 1.0);
       g.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 6);
 
-      this.targetBadgeText.setPosition(cx, badgeY + badgeH / 2);
+      this.targetBadgeText.setPosition(badgeX + badgeW / 2, badgeY + badgeH / 2);
       this.targetBadgeText.setVisible(true);
+    }
+  }
+
+  private updateCreteOnMapPowerMeter(p4State: HUDPhase04State, time: number): void {
+    const g = this.cretePowerGraphics;
+    g.clear();
+
+    const creteX = this.cretePaddle.x;
+    const creteY = ARENA_CONFIG.creteBaselineY;
+    const charge = Math.max(0, Math.min(1, p4State.powerCharge));
+    const isArmed = p4State.isPowerArmed;
+
+    const barW = 160;
+    const barH = 7;
+    const barX = creteX - barW / 2;
+    const barY = creteY + 36;
+
+    // 1. Sleek dark pill track background
+    g.fillStyle(0x03131e, 0.88);
+    g.fillRoundedRect(barX, barY, barW, barH, 3.5);
+    g.lineStyle(1.5, 0x0f3b4c, 0.85);
+    g.strokeRoundedRect(barX, barY, barW, barH, 3.5);
+
+    // 2. Dynamic power fill
+    if (charge > 0 || isArmed) {
+      const fillW = Math.max(5, barW * (isArmed ? 1 : charge));
+
+      if (isArmed) {
+        const pulse = (Math.sin(time * 0.008) + 1) * 0.5;
+        g.fillStyle(0xf59e0b, 0.95);
+        g.fillRoundedRect(barX, barY, fillW, barH, 3.5);
+        g.lineStyle(2.5, 0xfbbf24, 0.6 + pulse * 0.4);
+        g.strokeRoundedRect(barX - 1, barY - 1, fillW + 2, barH + 2, 4);
+
+        this.cretePowerText.setText('⚡ ARMED');
+        this.cretePowerText.setColor('#fcd34d');
+        this.cretePowerText.setVisible(true);
+      } else if (charge >= 1.0) {
+        const pulse = (Math.sin(time * 0.005) + 1) * 0.5;
+        g.fillStyle(0x34d399, 1.0);
+        g.fillRoundedRect(barX, barY, fillW, barH, 3.5);
+        g.lineStyle(2.0, 0x38bdf8, 0.5 + pulse * 0.4);
+        g.strokeRoundedRect(barX - 1, barY - 1, fillW + 2, barH + 2, 4);
+
+        this.cretePowerText.setText('⚡ READY');
+        this.cretePowerText.setColor('#38bdf8');
+        this.cretePowerText.setVisible(true);
+      } else {
+        g.fillStyle(0x38bdf8, 0.85);
+        g.fillRoundedRect(barX, barY, fillW, barH, 3.5);
+
+        if (charge >= 0.25) {
+          this.cretePowerText.setText(`${Math.round(charge * 100)}%`);
+          this.cretePowerText.setColor('#7dd3fc');
+          this.cretePowerText.setVisible(true);
+        } else {
+          this.cretePowerText.setVisible(false);
+        }
+      }
+
+      if (this.cretePowerText.visible && this.cretePowerText.text) {
+        const textY = barY + 18;
+        this.cretePowerText.setPosition(creteX, textY);
+        const tw = this.cretePowerText.width + 16;
+        const th = this.cretePowerText.height + 4;
+        g.fillStyle(0x02131e, 0.92);
+        g.fillRoundedRect(creteX - tw / 2, textY - th / 2, tw, th, 4);
+        g.lineStyle(1.0, isArmed ? 0xf59e0b : charge >= 1 ? 0x34d399 : 0x0f3b4c, 0.85);
+        g.strokeRoundedRect(creteX - tw / 2, textY - th / 2, tw, th, 4);
+      }
+    } else {
+      this.cretePowerText.setVisible(false);
+    }
+  }
+
+  private updateMapStatusBadge(p4State: HUDPhase04State): void {
+    const g = this.mapStatusBadgeGraphics;
+    g.clear();
+
+    let statusText = '';
+    let pillColor = 0x03131e;
+    let borderColor = 0x38bdf8;
+    let textColor = '#7dd3fc';
+
+    if (p4State.isMultiballActive) {
+      const secs = Math.ceil(p4State.multiballDurationRemainingSeconds);
+      statusText = `⚡ 3-BALL MULTIBALL · ${secs}s`;
+      pillColor = 0x241804;
+      borderColor = 0xf59e0b;
+      textColor = '#fcd34d';
+    } else if (p4State.weatherType !== 'none' && p4State.weatherType !== 'calm') {
+      const secs = Math.ceil(p4State.weatherDurationRemainingSeconds);
+      const wIcon = p4State.weatherType === 'meltemi' ? '🌬️' : '💨';
+      statusText = `${wIcon} ${p4State.weatherType.toUpperCase()} · ${secs}s`;
+      pillColor = 0x031e2b;
+      borderColor = 0x0ea5e9;
+      textColor = '#7dd3fc';
+    } else if (p4State.isPowerArmed) {
+      statusText = '⚡ POWER BOUNCE ARMED';
+      pillColor = 0x221303;
+      borderColor = 0xf59e0b;
+      textColor = '#fcd34d';
+    }
+
+    if (statusText) {
+      const cam = this.cameras.main;
+      const pt = cam.getWorldPoint(cam.width / 2, 75);
+      const zoomInv = 1 / cam.zoom;
+
+      this.mapStatusBadgeText.setText(statusText);
+      this.mapStatusBadgeText.setColor(textColor);
+      this.mapStatusBadgeText.setStroke('#020617', 4.5);
+      this.mapStatusBadgeText.setScale(zoomInv);
+
+      const padX = 20 * zoomInv;
+      const padY = 8 * zoomInv;
+      const w = this.mapStatusBadgeText.width * zoomInv + padX * 2;
+      const h = this.mapStatusBadgeText.height * zoomInv + padY * 2;
+
+      g.fillStyle(pillColor, 0.92);
+      g.fillRoundedRect(pt.x - w / 2, pt.y - h / 2, w, h, h / 2);
+      g.lineStyle(1.8 * zoomInv, borderColor, 0.95);
+      g.strokeRoundedRect(pt.x - w / 2, pt.y - h / 2, w, h, h / 2);
+
+      this.mapStatusBadgeText.setPosition(pt.x, pt.y);
+      this.mapStatusBadgeText.setVisible(true);
+    } else {
+      this.mapStatusBadgeText.setVisible(false);
     }
   }
 

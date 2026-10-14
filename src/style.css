@@ -404,10 +404,69 @@ canvas {
   text-shadow: 0 0 8px rgba(67, 201, 240, 0.6);
 }
 
+/* FLOATING ON-MAP TACTICAL STATUS BADGE (Floats cleanly below header, zero bottom obstruction) */
+.hud-status-badge {
+  position: absolute;
+  top: clamp(60px, 9vh, 72px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  background: rgba(3, 19, 30, 0.92);
+  border: 1.5px solid #38bdf8;
+  color: #7dd3fc;
+  font-family: inherit;
+  font-size: clamp(12px, 3vw, 13.5px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), 0 0 12px rgba(56, 189, 248, 0.25);
+  pointer-events: none;
+  z-index: 90;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: hudStatusPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes hudStatusPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.hud-status-badge.status-multiball {
+  background: rgba(36, 24, 4, 0.94);
+  border-color: #f59e0b;
+  color: #fcd34d;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), 0 0 16px rgba(245, 158, 11, 0.35);
+}
+
+.hud-status-badge.status-weather {
+  background: rgba(3, 30, 43, 0.94);
+  border-color: #0ea5e9;
+  color: #7dd3fc;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), 0 0 16px rgba(14, 165, 233, 0.35);
+}
+
+.hud-status-badge.status-armed {
+  background: rgba(34, 19, 3, 0.94);
+  border-color: #fbbf24;
+  color: #fef08a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), 0 0 16px rgba(251, 191, 36, 0.4);
+}
+
 /* SECTION 2.5: OFF-SCREEN CRETE POSITION BEACON (Visible when camera zooms north) */
 .hud-crete-indicator {
   position: absolute;
-  bottom: calc(max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px)) + 52px);
+  bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px));
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
@@ -530,17 +589,9 @@ canvas {
   filter: brightness(0.95);
 }
 
-/* SECTION 3: BOTTOM HUD (TARGET & STATUS + INTEGRATED POWER METER) */
+/* SECTION 3: BOTTOM HUD (DEPRECATED: Info displayed directly on map) */
 .hud-footer {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  padding-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px));
-  padding-left: max(12px, env(safe-area-inset-left, 12px));
-  padding-right: max(12px, env(safe-area-inset-right, 12px));
-  box-sizing: border-box;
+  display: none !important;
 }
 
 .hud-power-meter {

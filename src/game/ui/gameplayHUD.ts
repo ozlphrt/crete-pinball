@@ -29,6 +29,7 @@ export class GameplayHUD {
   private powerFillEl: HTMLElement | null = null;
   private creteIndicatorEl: HTMLElement | null = null;
   private creteLabelEl: HTMLElement | null = null;
+  private statusBadgeEl: HTMLElement | null = null;
 
   // Event callbacks
   private onPauseClickCallback?: () => void;
@@ -107,6 +108,9 @@ export class GameplayHUD {
         </div>
       </div>
 
+      <!-- FLOATING STATUS BADGE (Replaces bottom status, visible only during active events) -->
+      <div class="hud-status-badge" id="hud-status-badge" style="display: none;"></div>
+
       <!-- FLOATING OFF-SCREEN CRETE INDICATOR (Visible when camera zooms north) -->
       <div class="hud-crete-indicator" id="hud-crete-indicator" aria-label="Crete position indicator">
         <div class="hud-crete-pill">
@@ -115,29 +119,6 @@ export class GameplayHUD {
           </svg>
           <span class="hud-crete-label" id="hud-crete-label">CRETE</span>
           <span class="hud-crete-arrow">▼</span>
-        </div>
-      </div>
-
-      <!-- BOTTOM HUD (ROW 2: TARGET & STATUS + SLIM POWER METER) -->
-      <div class="hud-footer">
-        <!-- ROW 2: TARGET & STATUS (SECONDARY SLIM STRIP WITH INTEGRATED POWER TRACK) -->
-        <div class="hud-row-2">
-          <!-- LEFT: CURRENT TARGET -->
-          <div class="hud-target-group">
-            <span class="hud-target-label">TARGET</span>
-            <span class="hud-target-name" id="hud-target-name">NAXOS</span>
-            <span class="hud-target-bonus" id="hud-target-bonus">+500</span>
-          </div>
-
-          <!-- RIGHT: TEMPORARY STATUS -->
-          <div class="hud-status-col">
-            <span class="hud-status-text" id="hud-status-text">NORMAL</span>
-          </div>
-
-          <!-- INTEGRATED POWER METER TRACK -->
-          <div class="hud-power-meter">
-            <div class="hud-power-fill" id="hud-power-fill"></div>
-          </div>
         </div>
       </div>
     `;
@@ -158,6 +139,7 @@ export class GameplayHUD {
     this.powerFillEl = overlay.querySelector('#hud-power-fill');
     this.creteIndicatorEl = overlay.querySelector('#hud-crete-indicator');
     this.creteLabelEl = overlay.querySelector('#hud-crete-label');
+    this.statusBadgeEl = overlay.querySelector('#hud-status-badge');
 
     // Wire zoom button click
     if (this.zoomBtn) {
@@ -438,13 +420,35 @@ export class GameplayHUD {
       this.targetBonusEl.textContent = `+${targetBonus}`;
     }
 
-    // 6. TEMPORARY STATUS: Display only the SINGLE highest-priority status
-    // Priority order:
-    // 1. Multiball active
-    // 2. Power bounce armed
-    // 3. Power ready
-    // 4. Weather event
-    // 5. Difficulty indicator
+    // 6. FLOATING ON-MAP STATUS BADGE: Active events float cleanly below header, hidden during normal play
+    if (this.statusBadgeEl && phase04State) {
+      let statusHtml = '';
+      let statusClass = '';
+
+      if (phase04State.isMultiballActive) {
+        const secs = Math.ceil(phase04State.multiballDurationRemainingSeconds);
+        statusHtml = `⚡ 3-BALL MULTIBALL · ${secs}s`;
+        statusClass = 'status-multiball';
+      } else if (phase04State.weatherType !== 'none' && phase04State.weatherType !== 'calm') {
+        const secs = Math.ceil(phase04State.weatherDurationRemainingSeconds);
+        const icon = phase04State.weatherType === 'meltemi' ? '🌬️' : '💨';
+        statusHtml = `${icon} ${phase04State.weatherType.toUpperCase()} · ${secs}s`;
+        statusClass = 'status-weather';
+      } else if (phase04State.isPowerArmed) {
+        statusHtml = `⚡ POWER BOUNCE ARMED`;
+        statusClass = 'status-armed';
+      }
+
+      if (statusHtml) {
+        this.statusBadgeEl.textContent = statusHtml;
+        this.statusBadgeEl.className = `hud-status-badge ${statusClass}`;
+        this.statusBadgeEl.style.display = 'inline-flex';
+      } else {
+        this.statusBadgeEl.style.display = 'none';
+      }
+    }
+
+    // Legacy statusTextEl support (if present)
     if (this.statusTextEl && phase04State) {
       let statusLabel = '';
       let statusClass = '';
