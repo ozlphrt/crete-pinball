@@ -27,7 +27,7 @@ export class AudioManager {
 
   // Volume & Mute state
   private sfxVolume = 0.8;
-  private ambienceVolume = 0.4;
+  private ambienceVolume = 0.05;
   private musicVolume = 0.6;
   private sfxMuted = false;
   private ambienceMuted = false;
@@ -59,7 +59,9 @@ export class AudioManager {
    */
   public initFromPreferences(prefs: Partial<UserPreferences & AudioOptions>): void {
     if (typeof prefs.soundVolume === 'number') this.sfxVolume = prefs.soundVolume;
-    if (typeof prefs.ambienceVolume === 'number') this.ambienceVolume = prefs.ambienceVolume;
+    if (typeof prefs.ambienceVolume === 'number') {
+      this.ambienceVolume = prefs.ambienceVolume === 0.4 ? 0.05 : prefs.ambienceVolume;
+    }
     if (typeof prefs.musicVolume === 'number') this.musicVolume = prefs.musicVolume;
     if (typeof prefs.soundMuted === 'boolean') this.sfxMuted = prefs.soundMuted;
     if (typeof prefs.ambienceMuted === 'boolean') this.ambienceMuted = prefs.ambienceMuted;

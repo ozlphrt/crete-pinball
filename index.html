@@ -21,6 +21,22 @@
   <body style="background-color: #020814; height: 100%; margin: 0; padding: 0;">
     <div id="app">
       <div id="game-container"></div>
+      <div id="loading-overlay" class="loading-modal-overlay">
+        <div class="loading-modal-card">
+          <div class="loading-compass-icon">🧭</div>
+          <h1 class="loading-title">CRETE PINBALL</h1>
+          <div class="loading-subtitle">CHARTING THE AEGEAN ARCHIPELAGO</div>
+          <div class="loading-progress-container">
+            <div class="loading-progress-track">
+              <div id="loading-progress-fill" class="loading-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="loading-stats-row">
+              <span id="loading-status-text" class="loading-status-text">Loading Aegean topography...</span>
+              <span id="loading-percentage" class="loading-percentage">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

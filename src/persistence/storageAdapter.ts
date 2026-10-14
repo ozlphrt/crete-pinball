@@ -15,7 +15,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'dark-nautical',
   defaultDifficulty: 'normal',
   soundVolume: 0.8,
-  ambienceVolume: 0.4,
+  ambienceVolume: 0.05,
   musicVolume: 0.6,
   soundMuted: false,
   ambienceMuted: false,
@@ -81,7 +81,12 @@ export class LocalStorageAdapter implements IStorageAdapter {
       if (typeof window !== 'undefined' && window.localStorage) {
         const rawPrefs = window.localStorage.getItem(`${this.storagePrefix}prefs`);
         if (rawPrefs) {
-          this.preferences = { ...DEFAULT_PREFERENCES, ...JSON.parse(rawPrefs) };
+          const parsed = JSON.parse(rawPrefs);
+          // Migrate legacy 0.4 default down to minimum possible 0.05
+          if (parsed && parsed.ambienceVolume === 0.4) {
+            parsed.ambienceVolume = 0.05;
+          }
+          this.preferences = { ...DEFAULT_PREFERENCES, ...parsed };
         }
 
         const rawScores = window.localStorage.getItem(`${this.storagePrefix}scores`);

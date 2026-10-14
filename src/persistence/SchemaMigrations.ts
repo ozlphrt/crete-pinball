@@ -74,7 +74,7 @@ export class SchemaMigrations {
       theme: payload.preferences?.theme ?? 'dark-nautical',
       defaultDifficulty: payload.preferences?.defaultDifficulty ?? 'normal',
       soundVolume: payload.preferences?.soundVolume ?? 0.8,
-      ambienceVolume: payload.preferences?.ambienceVolume ?? 0.4,
+      ambienceVolume: payload.preferences?.ambienceVolume === 0.4 ? 0.05 : (payload.preferences?.ambienceVolume ?? 0.05),
       musicVolume: payload.preferences?.musicVolume ?? 0.6,
       soundMuted: payload.preferences?.soundMuted ?? false,
       ambienceMuted: payload.preferences?.ambienceMuted ?? false,
