@@ -65,7 +65,7 @@ body {
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   overflow: hidden;
   background-color: #020814;
 }
@@ -76,6 +76,7 @@ canvas {
   box-shadow: none !important;
   outline: none;
   border: none;
+  margin-top: 0 !important;
 }
 
 /* ==========================================================================
@@ -116,10 +117,10 @@ canvas {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
   column-gap: clamp(6px, 1.8vw, 12px);
   align-items: center;
-  background: rgba(7, 21, 37, 0.85);
+  background: rgba(7, 21, 37, 0.72);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(67, 201, 240, 0.16);
+  border: 1px solid rgba(67, 201, 240, 0.22);
   border-radius: 14px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
   padding: 8px 10px;

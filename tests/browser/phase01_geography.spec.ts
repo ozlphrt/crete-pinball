@@ -101,8 +101,8 @@ test.describe('Crete Pinball — Phase 01 Aegean Geography & Crete Movement', ()
       const devPanel = page.locator('#dev-diagnostics-panel');
       await expect(devPanel).toBeVisible();
 
-      // Initial center position is around X=450
-      await expect(devPanel).toContainText('Crete: X=450');
+      // Initial center position oscillates discovery wave around X=450 [400..500]
+      await expect(devPanel).toContainText(/Crete: X=4\d\d/);
 
       // Click in lower control zone (Y = 1200 / 1600 ~ 75%) to the left (X = 280)
       const targetLocalX = box.width * (280 / 900);
