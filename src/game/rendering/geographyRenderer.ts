@@ -42,6 +42,7 @@ export class GeographyRenderer {
 
   // Dynamic Crete paddle objects
   private cretePaddleSprite?: Phaser.GameObjects.Image;
+  private creteDaylightSprite?: Phaser.GameObjects.Image;
   private creteLabel?: Phaser.GameObjects.Text;
   private creteChevronLeft?: Phaser.GameObjects.Text;
   private creteChevronRight?: Phaser.GameObjects.Text;
@@ -89,9 +90,9 @@ export class GeographyRenderer {
     this.coastlineGraphics = this.scene.add.graphics();
     this.coastlineGraphics.setDepth(3);
 
-    // 4. Localized coastline dynamic impact glow layer
+    // 4. Localized coastline dynamic impact glow layer (depth 11 ensures rock arcs are visible above Crete paddle)
     this.impactGlowLayer = this.scene.add.graphics();
-    this.impactGlowLayer.setDepth(4);
+    this.impactGlowLayer.setDepth(11);
 
     // 3. Dynamic Crete fallback graphics
     this.creteFallbackGraphics = this.scene.add.graphics();
@@ -495,6 +496,20 @@ export class GeographyRenderer {
         this.cretePaddleSprite.setOrigin(0.5, 0.5);
         this.cretePaddleSprite.setScale(0.5); // 2x Retina asset rendered at true 1x physical size
 
+        // Dynamic Daylight Relief Image (revealed when collisions illuminate Crete's mountain summits)
+        if (!this.creteDaylightSprite && this.scene.textures.exists('crete_paddle_daylight')) {
+          this.creteDaylightSprite = this.scene.add.image(
+            creteX,
+            creteBaselineY,
+            'crete_paddle_daylight',
+          );
+          this.creteDaylightSprite.setDepth(10.1);
+          this.creteDaylightSprite.setOrigin(0.5, 0.5);
+          this.creteDaylightSprite.setScale(0.5);
+          this.creteDaylightSprite.setAlpha(0);
+          this.creteDaylightSprite.setVisible(false);
+        }
+
         // Elegant CRETE typography centered over the island
         this.creteLabel = this.scene.add
           .text(creteX, creteBaselineY + 2, 'CRETE', {
@@ -537,6 +552,25 @@ export class GeographyRenderer {
       } else {
         this.cretePaddleSprite.setPosition(creteX, creteBaselineY);
         this.cretePaddleSprite.setScale(0.5);
+
+        if (!this.creteDaylightSprite && this.scene.textures.exists('crete_paddle_daylight')) {
+          this.creteDaylightSprite = this.scene.add.image(
+            creteX,
+            creteBaselineY,
+            'crete_paddle_daylight',
+          );
+          this.creteDaylightSprite.setDepth(10.1);
+          this.creteDaylightSprite.setOrigin(0.5, 0.5);
+          this.creteDaylightSprite.setScale(0.5);
+          this.creteDaylightSprite.setAlpha(0);
+          this.creteDaylightSprite.setVisible(false);
+        }
+
+        if (this.creteDaylightSprite) {
+          this.creteDaylightSprite.setPosition(creteX, creteBaselineY);
+          this.creteDaylightSprite.setScale(0.5);
+        }
+
         this.creteLabel?.setPosition(creteX, creteBaselineY + 2);
         this.creteChevronLeft?.setPosition(
           creteX - this.cretePaddle.halfWidth - 14,
@@ -635,6 +669,10 @@ export class GeographyRenderer {
         this.terrainLightingShader.setVisible(false);
         this.terrainLightingShader.setUniform('uLightCount.value', 0);
       }
+      if (this.creteDaylightSprite && this.creteDaylightSprite.visible) {
+        this.creteDaylightSprite.setVisible(false);
+        this.creteDaylightSprite.setAlpha(0);
+      }
       return;
     }
 
@@ -727,6 +765,45 @@ export class GeographyRenderer {
       } else {
         this.terrainLightingShader.setVisible(false);
         this.terrainLightingShader.setUniform('uLightCount.value', 0);
+      }
+    }
+
+    // Dynamic daylight mountain relief illumination on Crete
+    if (this.creteDaylightSprite) {
+      let maxCreteAlpha = 0;
+      const creteX = this.cretePaddle.x;
+      const creteY = ARENA_CONFIG.creteBaselineY;
+
+      for (const flash of this.activeFlashes) {
+        const elapsed = now - flash.startTime;
+        let flashAlpha = 1.0;
+        if (elapsed > 90) {
+          const fadeProgress = (elapsed - 90) / (flash.durationMs - 90);
+          flashAlpha = Math.pow(Math.max(0, 1 - fadeProgress), 1.5);
+        }
+
+        if (flash.featureId === 'island-crete') {
+          // Direct collision on Crete: full radiant Mediterranean daylight reveal
+          maxCreteAlpha = Math.max(maxCreteAlpha, flashAlpha * 0.98);
+        } else {
+          // Ambient light spill from nearby collisions (Gavdos, Kythira, Kasos, Santorini)
+          const dx = creteX - flash.impactPoint.x;
+          const dy = creteY - flash.impactPoint.y;
+          const dist = Math.hypot(dx, dy);
+          const reach = flash.currentRadius + this.cretePaddle.halfWidth * 0.7;
+          if (dist < reach) {
+            const proximity = Math.pow(1 - dist / reach, 1.4);
+            maxCreteAlpha = Math.max(maxCreteAlpha, flashAlpha * proximity * 0.85);
+          }
+        }
+      }
+
+      if (maxCreteAlpha > 0.01) {
+        this.creteDaylightSprite.setVisible(true);
+        this.creteDaylightSprite.setAlpha(maxCreteAlpha);
+      } else {
+        this.creteDaylightSprite.setVisible(false);
+        this.creteDaylightSprite.setAlpha(0);
       }
     }
   }
@@ -899,6 +976,7 @@ export class GeographyRenderer {
     this.bgImage?.destroy();
     this.terrainImage?.destroy();
     this.cretePaddleSprite?.destroy();
+    this.creteDaylightSprite?.destroy();
     this.creteLabel?.destroy();
     this.creteChevronLeft?.destroy();
     this.creteChevronRight?.destroy();

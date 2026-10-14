@@ -155,6 +155,12 @@ export class GamePlaceholderScene extends Phaser.Scene {
     if (!this.textures.exists('crete_paddle')) {
       this.load.image('crete_paddle', VISUAL_ASSETS.crete_paddle);
     }
+    if (!this.textures.exists('crete_paddle_daylight')) {
+      this.load.image('crete_paddle_daylight', VISUAL_ASSETS.crete_paddle_daylight);
+    }
+    if (!this.textures.exists('crete_paddle_normal')) {
+      this.load.image('crete_paddle_normal', VISUAL_ASSETS.crete_paddle_normal);
+    }
   }
 
   public create(): void {

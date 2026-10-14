@@ -560,8 +560,8 @@ async function run() {
     }
   }
 
-  // 3. Generate Crete Paddle Sprite using Real Satellite DEM of Crete
-  console.log('3. Generating Crete paddle sprite with real DEM mountain relief...');
+  // 3. Generate Crete Paddle Sprite using Real Satellite DEM of Crete (Nocturnal, Daylight & Normal)
+  console.log('3. Generating Crete paddle sprites with real DEM mountain relief (nocturnal & daylight)...');
   const crete = aegean.crete;
   const creteSegs =
     crete.localCollisionSegments && crete.localCollisionSegments.length >= 3
@@ -577,8 +577,21 @@ async function run() {
   const padScale = 2; // 2x Retina resolution
   const spriteW = (creteW + 24) * padScale;
   const spriteH = (creteH + 24) * padScale;
+
   const cretePng = new PNG({ width: spriteW, height: spriteH });
   cretePng.data.fill(0);
+
+  const creteDaylightPng = new PNG({ width: spriteW, height: spriteH });
+  creteDaylightPng.data.fill(0);
+
+  const creteNormalPng = new PNG({ width: spriteW, height: spriteH });
+  for (let i = 0; i < spriteW * spriteH; i++) {
+    const idx = i << 2;
+    creteNormalPng.data[idx] = 128;     // Nx = 0
+    creteNormalPng.data[idx + 1] = 128; // Ny = 0
+    creteNormalPng.data[idx + 2] = 255; // Nz = 1.0
+    creteNormalPng.data[idx + 3] = 0;   // Elev = 0
+  }
 
   for (let sy = 0; sy < spriteH; sy++) {
     const ly = sy / padScale - 12 - crete.halfHeight;
@@ -611,43 +624,24 @@ async function run() {
 
         // Continuous elevation model: shades of 0 and 1
         const shadeValue = computeTerrainShade(h0, slopeX, slopeY);
+
+        // 1. Nocturnal Terrain: Natural Aegean marine cyan shoreline (NO artificial orange shield)
         let [cR, cG, cB] = sampleTerrainRamp(shadeValue);
 
-        // Refined Coastline Rim on Crete
-        const isNorth = py < -8;
-        if (isNorth) {
-          // Northern defense rim: refined metallic golden edge
-          if (dist < 3.2) {
-            const innerGlowNorm = dist / 3.2;
-            const innerBloom = Math.pow(1 - innerGlowNorm, 1.8) * 0.30;
-            cR = Math.round(cR * (1 - innerBloom) + 180 * innerBloom);
-            cG = Math.round(cG * (1 - innerBloom) + 125 * innerBloom);
-            cB = Math.round(cB * (1 - innerBloom) + 30 * innerBloom);
+        // Refined natural coastline rim on all shores of Crete (matching all 75 Aegean islands)
+        if (dist < 3.0) {
+          const innerGlowNorm = dist / 3.0;
+          const innerBloom = Math.pow(1 - innerGlowNorm, 1.8) * 0.22;
+          cR = Math.round(cR * (1 - innerBloom) + 16 * innerBloom);
+          cG = Math.round(cG * (1 - innerBloom) + 85 * innerBloom);
+          cB = Math.round(cB * (1 - innerBloom) + 140 * innerBloom);
 
-            if (dist < 1.2) {
-              const coreNorm = dist / 1.2;
-              const coreHighlight = Math.pow(1 - coreNorm, 1.3) * 0.45;
-              cR = Math.round(cR * (1 - coreHighlight) + 235 * coreHighlight);
-              cG = Math.round(cG * (1 - coreHighlight) + 180 * coreHighlight);
-              cB = Math.round(cB * (1 - coreHighlight) + 65 * coreHighlight);
-            }
-          }
-        } else {
-          // Southern / eastern / western shores: refined marine cyan edge
-          if (dist < 3.0) {
-            const innerGlowNorm = dist / 3.0;
-            const innerBloom = Math.pow(1 - innerGlowNorm, 1.8) * 0.22;
-            cR = Math.round(cR * (1 - innerBloom) + 16 * innerBloom);
-            cG = Math.round(cG * (1 - innerBloom) + 85 * innerBloom);
-            cB = Math.round(cB * (1 - innerBloom) + 140 * innerBloom);
-
-            if (dist < 1.1) {
-              const coreNorm = dist / 1.1;
-              const coreHighlight = Math.pow(1 - coreNorm, 1.3) * 0.38;
-              cR = Math.round(cR * (1 - coreHighlight) + 38 * coreHighlight);
-              cG = Math.round(cG * (1 - coreHighlight) + 145 * coreHighlight);
-              cB = Math.round(cB * (1 - coreHighlight) + 195 * coreHighlight);
-            }
+          if (dist < 1.3) {
+            const coreNorm = dist / 1.3;
+            const coreHighlight = Math.pow(1 - coreNorm, 1.2) * 0.72;
+            cR = Math.round(cR * (1 - coreHighlight) + 56 * coreHighlight);
+            cG = Math.round(cG * (1 - coreHighlight) + 189 * coreHighlight);
+            cB = Math.round(cB * (1 - coreHighlight) + 248 * coreHighlight);
           }
         }
 
@@ -655,35 +649,73 @@ async function run() {
         cretePng.data[outIdx + 1] = Math.min(255, cG);
         cretePng.data[outIdx + 2] = Math.min(255, cB);
         cretePng.data[outIdx + 3] = 255;
-      } else if (dist < 3.2) {
-        // Outer subtle rim on Crete into surrounding sea
-        const isNorth = py < -8;
-        const normDist = dist / 3.2;
-        const bloomAlpha = Math.pow(1 - normDist, 2.2) * (isNorth ? 0.35 : 0.28);
 
-        let glowR: number, glowG: number, glowB: number;
-        if (isNorth) {
+        // 2. Mediterranean Daylight Terrain: Sunlit summits (Lefka Ori, Psiloritis/Ida), gorges & plateaus
+        const [dlR, dlG, dlB] = sampleDaylightTerrainRamp(shadeValue);
+        const sunBoost = 1.28;
+        creteDaylightPng.data[outIdx] = Math.min(255, Math.round(dlR * sunBoost + 16));
+        creteDaylightPng.data[outIdx + 1] = Math.min(255, Math.round(dlG * sunBoost + 16));
+        creteDaylightPng.data[outIdx + 2] = Math.min(255, Math.round(dlB * sunBoost + 12));
+        creteDaylightPng.data[outIdx + 3] = 255;
+
+        // 3. Normal vector & elevation map for dynamic lighting shader
+        const zFactor = 8.5;
+        let nx = -slopeX * zFactor;
+        let ny = -slopeY * zFactor;
+        let nz = 1.0;
+        if (dist < 3.0) {
+          const coastT = dist / 3.0;
+          nz = Math.max(0.3, nz * coastT);
+        }
+        const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1.0;
+        nx /= nLen;
+        ny /= nLen;
+        nz /= nLen;
+
+        creteNormalPng.data[outIdx] = Math.round((nx * 0.5 + 0.5) * 255);
+        creteNormalPng.data[outIdx + 1] = Math.round((ny * 0.5 + 0.5) * 255);
+        creteNormalPng.data[outIdx + 2] = Math.round((nz * 0.5 + 0.5) * 255);
+        const elevNorm = Math.max(0, Math.min(255, Math.round((Math.max(0, h0) / 2500) * 255)));
+        creteNormalPng.data[outIdx + 3] = elevNorm;
+      } else if (dist < 3.8) {
+        // Natural nocturnal ocean rim radiating into the surrounding sea
+        if (dist < 3.2) {
+          const normDist = dist / 3.2;
+          const bloomAlpha = Math.pow(1 - normDist, 1.8) * 0.42;
           const colorT = Math.min(1, dist / 2.0);
-          glowR = Math.round(210 * (1 - colorT) + 120 * colorT);
-          glowG = Math.round(155 * (1 - colorT) + 80 * colorT);
-          glowB = Math.round(45 * (1 - colorT) + 15 * colorT);
-        } else {
-          const colorT = Math.min(1, dist / 2.0);
-          glowR = Math.round(20 * (1 - colorT) + 6 * colorT);
-          glowG = Math.round(110 * (1 - colorT) + 45 * colorT);
-          glowB = Math.round(175 * (1 - colorT) + 115 * colorT);
+          const glowR = Math.round(24 * (1 - colorT) + 6 * colorT);
+          const glowG = Math.round(140 * (1 - colorT) + 45 * colorT);
+          const glowB = Math.round(215 * (1 - colorT) + 115 * colorT);
+
+          const existingA = cretePng.data[outIdx + 3]! / 255;
+          if (existingA < 0.99) {
+            const combinedAlpha = Math.min(0.38, existingA + bloomAlpha * (1 - existingA * 0.5));
+            const w1 = existingA / (combinedAlpha || 1);
+            const w2 = (bloomAlpha * (1 - existingA * 0.5)) / (combinedAlpha || 1);
+            cretePng.data[outIdx] = Math.round(cretePng.data[outIdx]! * w1 + glowR * w2);
+            cretePng.data[outIdx + 1] = Math.round(cretePng.data[outIdx + 1]! * w1 + glowG * w2);
+            cretePng.data[outIdx + 2] = Math.round(cretePng.data[outIdx + 2]! * w1 + glowB * w2);
+            cretePng.data[outIdx + 3] = Math.round(255 * combinedAlpha);
+          }
         }
 
-        const existingA = cretePng.data[outIdx + 3]! / 255;
-        if (existingA < 0.99) {
-          const maxA = isNorth ? 0.45 : 0.38;
-          const combinedAlpha = Math.min(maxA, existingA + bloomAlpha * (1 - existingA * 0.5));
-          const w1 = existingA / (combinedAlpha || 1);
-          const w2 = (bloomAlpha * (1 - existingA * 0.5)) / (combinedAlpha || 1);
-          cretePng.data[outIdx] = Math.round(cretePng.data[outIdx]! * w1 + glowR * w2);
-          cretePng.data[outIdx + 1] = Math.round(cretePng.data[outIdx]! * w1 + glowG * w2);
-          cretePng.data[outIdx + 2] = Math.round(cretePng.data[outIdx + 2]! * w1 + glowB * w2);
-          cretePng.data[outIdx + 3] = Math.round(255 * combinedAlpha);
+        // Daylight coastal shallows: crystal Mediterranean aquamarine / turquoise reef
+        const normDistDay = dist / 3.8;
+        const reefAlpha = Math.pow(1 - normDistDay, 1.5) * 0.70;
+        const colorTDay = Math.min(1, dist / 2.2);
+        const reefR = Math.round(18 * (1 - colorTDay) + 14 * colorTDay);
+        const reefG = Math.round(185 * (1 - colorTDay) + 145 * colorTDay);
+        const reefB = Math.round(195 * (1 - colorTDay) + 220 * colorTDay);
+
+        const existingDayA = creteDaylightPng.data[outIdx + 3]! / 255;
+        if (existingDayA < 0.99) {
+          const combinedAlphaDay = Math.min(0.60, existingDayA + reefAlpha * (1 - existingDayA * 0.5));
+          const w1 = existingDayA / (combinedAlphaDay || 1);
+          const w2 = (reefAlpha * (1 - existingDayA * 0.5)) / (combinedAlphaDay || 1);
+          creteDaylightPng.data[outIdx] = Math.round(creteDaylightPng.data[outIdx]! * w1 + reefR * w2);
+          creteDaylightPng.data[outIdx + 1] = Math.round(creteDaylightPng.data[outIdx + 1]! * w1 + reefG * w2);
+          creteDaylightPng.data[outIdx + 2] = Math.round(creteDaylightPng.data[outIdx + 2]! * w1 + reefB * w2);
+          creteDaylightPng.data[outIdx + 3] = Math.round(255 * combinedAlphaDay);
         }
       }
     }
@@ -698,6 +730,8 @@ async function run() {
     fs.writeFileSync(path.join(dir, 'aegean_terrain_daylight.png'), PNG.sync.write(terrainDaylightPng));
     fs.writeFileSync(path.join(dir, 'aegean_terrain_normal.png'), PNG.sync.write(terrainNormalPng));
     fs.writeFileSync(path.join(dir, 'crete_paddle.png'), PNG.sync.write(cretePng));
+    fs.writeFileSync(path.join(dir, 'crete_paddle_daylight.png'), PNG.sync.write(creteDaylightPng));
+    fs.writeFileSync(path.join(dir, 'crete_paddle_normal.png'), PNG.sync.write(creteNormalPng));
   }
 
   console.log('Visual assets generated successfully!');

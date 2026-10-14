@@ -30,6 +30,10 @@ export class BootScene extends Phaser.Scene {
           statusEl.textContent = 'Loading mountain elevation normals...';
         } else if (file.key === 'crete_paddle') {
           statusEl.textContent = 'Loading Crete paddle dynamics...';
+        } else if (file.key === 'crete_paddle_daylight') {
+          statusEl.textContent = 'Loading Crete daylight topography...';
+        } else if (file.key === 'crete_paddle_normal') {
+          statusEl.textContent = 'Loading Crete elevation relief...';
         }
       }
     });
@@ -55,6 +59,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('aegean_terrain_daylight', VISUAL_ASSETS.aegean_terrain_daylight);
     this.load.image('aegean_terrain_normal', VISUAL_ASSETS.aegean_terrain_normal);
     this.load.image('crete_paddle', VISUAL_ASSETS.crete_paddle);
+    this.load.image('crete_paddle_daylight', VISUAL_ASSETS.crete_paddle_daylight);
+    this.load.image('crete_paddle_normal', VISUAL_ASSETS.crete_paddle_normal);
   }
 
   public create(): void {

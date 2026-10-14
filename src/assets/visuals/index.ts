@@ -3,6 +3,8 @@ import aegeanTerrainUrl from './aegean_terrain.png';
 import aegeanTerrainDaylightUrl from './aegean_terrain_daylight.png';
 import aegeanTerrainNormalUrl from './aegean_terrain_normal.png';
 import cretePaddleUrl from './crete_paddle.png';
+import cretePaddleDaylightUrl from './crete_paddle_daylight.png';
+import cretePaddleNormalUrl from './crete_paddle_normal.png';
 
 export const VISUAL_ASSETS = {
   aegean_background: aegeanBackgroundUrl,
@@ -10,4 +12,7 @@ export const VISUAL_ASSETS = {
   aegean_terrain_daylight: aegeanTerrainDaylightUrl,
   aegean_terrain_normal: aegeanTerrainNormalUrl,
   crete_paddle: cretePaddleUrl,
+  crete_paddle_daylight: cretePaddleDaylightUrl,
+  crete_paddle_normal: cretePaddleNormalUrl,
 } as const;
+
