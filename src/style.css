@@ -303,14 +303,14 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(7, 21, 37, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(67, 201, 240, 0.18);
   border-radius: 13px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
-  padding: 7px 14px 9px 14px;
+  padding: 7px 12px 9px 12px;
   height: 42px;
   box-sizing: border-box;
   overflow: hidden;
@@ -319,38 +319,40 @@ canvas {
 .hud-target-group {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
   white-space: nowrap;
 }
 
 .hud-target-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: #A9BACB;
-  letter-spacing: 0.8px;
+  color: #8FA2B6;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-target-name {
-  font-size: clamp(15px, 4vw, 18px);
+  font-size: clamp(12.5px, 3.4vw, 15px);
   font-weight: 800;
   color: #F5BF62;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
   line-height: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .hud-target-bonus {
-  font-size: clamp(13px, 3.5vw, 15px);
+  font-size: clamp(11.5px, 2.8vw, 13px);
   font-weight: 700;
   color: #55E0C3;
   margin-left: 1px;
@@ -369,9 +371,9 @@ canvas {
 }
 
 .hud-status-text {
-  font-size: clamp(14px, 3.6vw, 16px);
+  font-size: clamp(11px, 2.8vw, 13px);
   font-weight: 800;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.4px;
   line-height: 1;
   color: #A9BACB;
   text-transform: uppercase;
@@ -451,6 +453,30 @@ canvas {
 @keyframes hud-armed-pulse {
   from { opacity: 0.85; filter: drop-shadow(0 0 4px #F5BF62); }
   to { opacity: 1; filter: drop-shadow(0 0 10px #F5BF62); }
+}
+/* COMPACT MOBILE HUD FOOTER */
+@media (max-width: 420px) {
+  .hud-row-2 {
+    padding: 6px 10px 8px 10px;
+    gap: 6px;
+  }
+  .hud-target-group {
+    gap: 5px;
+  }
+  .hud-target-label {
+    font-size: 9.5px;
+    letter-spacing: 0.4px;
+  }
+  .hud-target-name {
+    font-size: clamp(11.5px, 3.1vw, 13.5px);
+  }
+  .hud-target-bonus {
+    font-size: 11px;
+  }
+  .hud-status-text {
+    font-size: 10.5px;
+    letter-spacing: 0.3px;
+  }
 }
 
 /* REDUCED MOTION PREFERENCES */

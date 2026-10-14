@@ -354,7 +354,15 @@ export class GameplayHUD {
       this.targetNameEl.style.transform = 'translateY(-2px)';
       setTimeout(() => {
         if (this.targetNameEl) {
-          this.targetNameEl.textContent = targetName.toUpperCase();
+          const upper = targetName.toUpperCase();
+          this.targetNameEl.textContent = upper;
+          if (upper.length >= 10) {
+            this.targetNameEl.style.fontSize = 'clamp(10.5px, 2.7vw, 12.5px)';
+          } else if (upper.length >= 8) {
+            this.targetNameEl.style.fontSize = 'clamp(11.5px, 3.0vw, 13.5px)';
+          } else {
+            this.targetNameEl.style.fontSize = '';
+          }
           this.targetNameEl.style.opacity = '1';
           this.targetNameEl.style.transform = 'translateY(0)';
         }

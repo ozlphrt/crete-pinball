@@ -1,4 +1,4 @@
-import { GameDifficulty, GameState, makeIslandId, makeTimestampMs } from '../../types';
+import { GameDifficulty, GameState, SupportedLocale, makeIslandId, makeTimestampMs } from '../../types';
 import { GameStateManager } from './gameStateManager';
 import { ScoringSystem, QualifiedScoreEvent } from './scoringSystem';
 import { ComboSystem } from './comboSystem';
@@ -118,6 +118,10 @@ export class RunController {
 
   public get currentTarget(): BonusTarget {
     return this.targetSystem.currentTarget;
+  }
+
+  public getTargetDisplayName(locale?: SupportedLocale): string {
+    return this.targetSystem.getIslandName(this.targetSystem.currentTarget.islandId, locale);
   }
 
   public get difficulty(): GameDifficulty {

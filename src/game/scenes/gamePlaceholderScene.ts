@@ -1162,11 +1162,15 @@ export class GamePlaceholderScene extends Phaser.Scene {
         this.runController.getMultiballSystem().durationRemaining / 1000,
     };
 
+    const targetDisplayName = this.runController.getTargetDisplayName(
+      this.i18n.getLocale() as any,
+    );
+
     this.hud.update(
       this.runController.score,
       this.runController.comboMultiplier,
       this.runController.lives,
-      target.name,
+      targetDisplayName,
       target.bonusPoints,
       this.runController.difficulty,
       curState === 'paused',

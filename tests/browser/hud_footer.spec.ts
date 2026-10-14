@@ -99,4 +99,55 @@ test.describe('HUD Footer & Power Meter Layout Verification', () => {
       path: path.join(outDir, 'hud_footer_partial_charge.png'),
     });
   });
+
+  test('renders long target island name with POWER READY without clipping or truncation', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto('/');
+    await page.waitForSelector('canvas');
+    await page.waitForSelector('.hud-footer');
+
+    await page.evaluate(() => {
+      const game = (window as unknown as { game?: any }).game;
+      if (!game) throw new Error('game not found');
+      const scene = game.scene.getScene('GamePlaceholderScene');
+      if (!scene) throw new Error('GamePlaceholderScene not found');
+
+      const hud = scene['hud'];
+      if (hud) {
+        hud.update(
+          12500,
+          1,
+          3,
+          'Astypalaia',
+          500,
+          'normal',
+          false,
+          {
+            powerCharge: 1.0,
+            isPowerArmed: false,
+            weatherType: 'none',
+            weatherDurationRemainingSeconds: 0,
+            isMultiballActive: false,
+            multiballDurationRemainingSeconds: 0,
+          }
+        );
+      }
+    });
+
+    await page.waitForTimeout(300);
+
+    const outDir = path.resolve('docs/screenshots');
+    const footerEl = page.locator('.hud-footer');
+    await footerEl.screenshot({
+      path: path.join(outDir, 'hud_footer_astypalaia_power_ready.png'),
+    });
+
+    const isTruncated = await page.evaluate(() => {
+      const el = document.querySelector('#hud-target-name');
+      if (!el) return true;
+      return el.scrollWidth > el.clientWidth;
+    });
+
+    expect(isTruncated).toBe(false);
+  });
 });

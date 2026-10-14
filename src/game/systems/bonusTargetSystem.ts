@@ -1,6 +1,6 @@
-import { Point2D } from '../../types';
+import { Point2D, SupportedLocale } from '../../types';
 import { getStaticFeatures } from '../../geography/aegeanData';
-import { IslandFeature } from '../../geography/contracts';
+import { IslandFeature, LocalizedNames } from '../../geography/contracts';
 import { SeededRandom } from '../physics/seededRandom';
 
 export interface BonusTarget {
@@ -24,6 +24,7 @@ export const DEFAULT_TARGET_CONFIG: BonusTargetConfig = {
 export class BonusTargetSystem {
   private readonly eligibleIslands: readonly IslandFeature[];
   private readonly featureNameMap = new Map<string, string>();
+  private readonly featureNamesMap = new Map<string, LocalizedNames>();
   private readonly featureCenterMap = new Map<string, Point2D>();
   private rng: SeededRandom;
   private currentBonusTarget!: BonusTarget;
@@ -33,15 +34,22 @@ export class BonusTargetSystem {
     this.config = { ...DEFAULT_TARGET_CONFIG, ...config };
     this.rng = new SeededRandom(this.config.initialSeed);
 
-    // Build eligible collidable islands pool (excluding mainlands and Crete)
+    // Build eligible collidable islands pool (excluding mainlands, Crete, and unnamed islets)
     const allFeatures = getStaticFeatures();
     const eligible: IslandFeature[] = [];
 
     for (const f of allFeatures) {
       this.featureNameMap.set(f.id, f.names.en);
+      this.featureNamesMap.set(f.id, f.names);
       this.featureCenterMap.set(f.id, f.centroid);
 
-      if (!f.classification.includes('mainland') && f.isCollidable && f.id !== 'island-crete') {
+      // Only choose authentic named Aegean islands (e.g. Rhodes, Santorini, Mykonos, Naxos, etc.)
+      if (
+        !f.classification.includes('mainland') &&
+        f.isCollidable &&
+        f.id !== 'island-crete' &&
+        f.id.startsWith('island-')
+      ) {
         eligible.push(f);
       }
     }
@@ -54,7 +62,11 @@ export class BonusTargetSystem {
     return this.currentBonusTarget;
   }
 
-  public getIslandName(id: string): string {
+  public getIslandName(id: string, locale?: SupportedLocale): string {
+    const names = this.featureNamesMap.get(id);
+    if (names && locale) {
+      return names[locale] ?? names.en ?? id;
+    }
     return this.featureNameMap.get(id) ?? id;
   }
 
@@ -81,8 +93,8 @@ export class BonusTargetSystem {
   public selectNextTarget(excludeId?: string): BonusTarget {
     if (this.eligibleIslands.length === 0) {
       this.currentBonusTarget = {
-        id: 'cyclades-naxos',
-        islandId: 'cyclades-naxos',
+        id: 'island-naxos',
+        islandId: 'island-naxos',
         name: 'Naxos',
         center: { x: 450, y: 800 },
         bonusPoints: this.config.bonusPoints,
