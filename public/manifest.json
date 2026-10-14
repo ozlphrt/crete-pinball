@@ -1,0 +1,17 @@
+{
+  "name": "Crete Pinball",
+  "short_name": "CretePinball",
+  "description": "Mobile-first offline arcade pinball across the Aegean Sea",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020408",
+  "theme_color": "#020408",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
