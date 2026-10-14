@@ -199,6 +199,23 @@ export class GeographyRenderer {
       return;
     }
 
+    // If the island already has a permanent visible label on the map, pulse the existing label
+    // instead of spawning a duplicate overlapping label
+    const existingLabel = this.labelObjects.find(
+      (lbl) => (lbl as unknown as { featureId?: string }).featureId === feature.id,
+    );
+    if (existingLabel && !isSpecial && !isTarget) {
+      this.scene.tweens.killTweensOf(existingLabel);
+      this.scene.tweens.add({
+        targets: existingLabel,
+        scale: 1.25,
+        duration: 120,
+        yoyo: true,
+        ease: 'Quad.easeOut',
+      });
+      return;
+    }
+
     const localizedName = rawName.toUpperCase();
     let textColor = '#e0f2fe';
     const strokeColor = '#030712';

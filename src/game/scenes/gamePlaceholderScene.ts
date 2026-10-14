@@ -40,6 +40,7 @@ import { AchievementsModal } from '../ui/achievementsModal';
 import { AnalyticsCollector } from '../../analytics/AnalyticsCollector';
 import { SessionCheckpointService } from '../../persistence/SessionCheckpointService';
 import { SCHEMA_VERSION, GEO_DATA_VERSION, PHYSICS_RULESET_VERSION } from '../../config';
+import { VISUAL_ASSETS } from '../../assets/visuals';
 
 export class GamePlaceholderScene extends Phaser.Scene {
   private i18n!: I18nManager;
@@ -140,19 +141,19 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
   public preload(): void {
     if (!this.textures.exists('aegean_background')) {
-      this.load.image('aegean_background', '/assets/visuals/aegean_background.png');
+      this.load.image('aegean_background', VISUAL_ASSETS.aegean_background);
     }
     if (!this.textures.exists('aegean_terrain')) {
-      this.load.image('aegean_terrain', '/assets/visuals/aegean_terrain.png');
+      this.load.image('aegean_terrain', VISUAL_ASSETS.aegean_terrain);
     }
     if (!this.textures.exists('aegean_terrain_daylight')) {
-      this.load.image('aegean_terrain_daylight', '/assets/visuals/aegean_terrain_daylight.png');
+      this.load.image('aegean_terrain_daylight', VISUAL_ASSETS.aegean_terrain_daylight);
     }
     if (!this.textures.exists('aegean_terrain_normal')) {
-      this.load.image('aegean_terrain_normal', '/assets/visuals/aegean_terrain_normal.png');
+      this.load.image('aegean_terrain_normal', VISUAL_ASSETS.aegean_terrain_normal);
     }
     if (!this.textures.exists('crete_paddle')) {
-      this.load.image('crete_paddle', '/assets/visuals/crete_paddle.png');
+      this.load.image('crete_paddle', VISUAL_ASSETS.crete_paddle);
     }
   }
 

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { LocalStorageAdapter } from '../../persistence/storageAdapter';
+import { VISUAL_ASSETS } from '../../assets/visuals';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -7,11 +8,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   public preload(): void {
-    this.load.image('aegean_background', '/assets/visuals/aegean_background.png');
-    this.load.image('aegean_terrain', '/assets/visuals/aegean_terrain.png');
-    this.load.image('aegean_terrain_daylight', '/assets/visuals/aegean_terrain_daylight.png');
-    this.load.image('aegean_terrain_normal', '/assets/visuals/aegean_terrain_normal.png');
-    this.load.image('crete_paddle', '/assets/visuals/crete_paddle.png');
+    this.load.image('aegean_background', VISUAL_ASSETS.aegean_background);
+    this.load.image('aegean_terrain', VISUAL_ASSETS.aegean_terrain);
+    this.load.image('aegean_terrain_daylight', VISUAL_ASSETS.aegean_terrain_daylight);
+    this.load.image('aegean_terrain_normal', VISUAL_ASSETS.aegean_terrain_normal);
+    this.load.image('crete_paddle', VISUAL_ASSETS.crete_paddle);
   }
 
   public create(): void {
