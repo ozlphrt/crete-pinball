@@ -25,12 +25,22 @@ export class GameApp {
 
     this.orientationHandler = new OrientationHandler(this.i18n);
 
+    const screenWidth = typeof window !== 'undefined' ? (window.innerWidth || 390) : 390;
+    const screenHeight = typeof window !== 'undefined' ? (window.innerHeight || 844) : 844;
+    const aspect = screenHeight / screenWidth;
+    // On portrait screens taller than 9:16 (1.7778), dynamically extend the world height
+    // so the Aegean sea map extends seamlessly to the very bottom under the target banner.
+    const arenaHeight = Math.max(
+      ARENA_CONFIG.worldHeight,
+      Math.round(ARENA_CONFIG.worldWidth * aspect),
+    );
+
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       parent: containerId,
       width: ARENA_CONFIG.worldWidth,
-      height: ARENA_CONFIG.worldHeight,
-      backgroundColor: '#020814',
+      height: arenaHeight,
+      backgroundColor: '#061328',
       transparent: true,
       render: {
         antialias: true,
@@ -39,7 +49,7 @@ export class GameApp {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
         width: ARENA_CONFIG.worldWidth,
-        height: ARENA_CONFIG.worldHeight,
+        height: arenaHeight,
       },
       physics: {
         default: 'matter',
@@ -82,6 +92,18 @@ export class GameApp {
       } else {
         this.game?.events.emit('app_foregrounded');
       }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!this.game) return;
+      const w = window.innerWidth || 390;
+      const h = window.innerHeight || 844;
+      const curAspect = h / w;
+      const newArenaH = Math.max(
+        ARENA_CONFIG.worldHeight,
+        Math.round(ARENA_CONFIG.worldWidth * curAspect),
+      );
+      this.game.scale.resize(ARENA_CONFIG.worldWidth, newArenaH);
     });
   }
 

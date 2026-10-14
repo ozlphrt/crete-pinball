@@ -331,24 +331,30 @@ export class GeographyRenderer {
 
   public renderStaticGeography(): void {
     const W = ARENA_CONFIG.worldWidth;
-    const H = ARENA_CONFIG.worldHeight;
+    const sceneH = Math.max(ARENA_CONFIG.worldHeight, this.scene.scale.height);
 
     // 1. Sea Background Image (Navy gradient, range rings, compass rose, atmospheric mist)
     if (this.scene.textures.exists('aegean_background')) {
       if (!this.bgImage) {
-        this.bgImage = this.scene.add.image(W / 2, H / 2, 'aegean_background');
+        this.bgImage = this.scene.add.image(W / 2, sceneH / 2, 'aegean_background');
         this.bgImage.setDepth(0);
-        this.bgImage.setDisplaySize(W, H);
       }
+      this.bgImage.setPosition(W / 2, sceneH / 2);
+      this.bgImage.setDisplaySize(W, sceneH);
     }
 
     // 2. Realistic Mountain Relief Terrain Layer (Greece, Turkey, 75 Aegean Islands)
     if (this.scene.textures.exists('aegean_terrain')) {
       if (!this.terrainImage) {
-        this.terrainImage = this.scene.add.image(W / 2, H / 2, 'aegean_terrain');
+        this.terrainImage = this.scene.add.image(
+          W / 2,
+          ARENA_CONFIG.worldHeight / 2,
+          'aegean_terrain',
+        );
         this.terrainImage.setDepth(2);
-        this.terrainImage.setDisplaySize(W, H);
       }
+      this.terrainImage.setPosition(W / 2, ARENA_CONFIG.worldHeight / 2);
+      this.terrainImage.setDisplaySize(W, ARENA_CONFIG.worldHeight);
       this.fallbackGraphics.clear();
     } else {
       // Fallback vector rendering if texture not loaded
@@ -533,6 +539,15 @@ export class GeographyRenderer {
 
   public refreshLabels(): void {
     this.renderIslandLabels();
+  }
+
+  public refreshStaticGeography(): void {
+    const W = ARENA_CONFIG.worldWidth;
+    const sceneH = Math.max(ARENA_CONFIG.worldHeight, this.scene.scale.height);
+    if (this.bgImage) {
+      this.bgImage.setPosition(W / 2, sceneH / 2);
+      this.bgImage.setDisplaySize(W, sceneH);
+    }
   }
 
   public renderCrete(): void {

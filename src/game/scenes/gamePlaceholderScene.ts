@@ -167,8 +167,15 @@ export class GamePlaceholderScene extends Phaser.Scene {
 
   public create(): void {
     // Camera setup
-    this.cameras.main.setBackgroundColor('#020814');
-    this.cameras.main.setBounds(0, 0, ARENA_CONFIG.worldWidth, ARENA_CONFIG.worldHeight);
+    const arenaH = Math.max(ARENA_CONFIG.worldHeight, this.scale.height);
+    this.cameras.main.setBackgroundColor('#061328');
+    this.cameras.main.setBounds(0, 0, ARENA_CONFIG.worldWidth, arenaH);
+
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      const newH = Math.max(ARENA_CONFIG.worldHeight, gameSize.height);
+      this.cameras.main.setBounds(0, 0, ARENA_CONFIG.worldWidth, newH);
+      this.geographyRenderer.refreshStaticGeography();
+    });
 
     // Playfield guidelines & structural frame
     this.guidelinesGraphics = this.add.graphics();

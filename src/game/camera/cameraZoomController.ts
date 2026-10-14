@@ -55,7 +55,7 @@ export class CameraZoomController {
     this.zoomLambda = config.zoomLambda ?? 2.2;
 
     this.currentCenterX = ARENA_CONFIG.worldWidth / 2;
-    this.currentCenterY = ARENA_CONFIG.worldHeight / 2;
+    this.currentCenterY = (camera.scene?.scale?.height ?? ARENA_CONFIG.worldHeight) / 2;
   }
 
   public isZoomEnabled(): boolean {
@@ -81,7 +81,7 @@ export class CameraZoomController {
 
   public update(deltaSeconds: number, activeBalls: readonly BallBody[]): void {
     const W = ARENA_CONFIG.worldWidth;
-    const H = ARENA_CONFIG.worldHeight;
+    const H = this.camera?.scene?.scale?.height ?? ARENA_CONFIG.worldHeight;
     const dt = Math.max(0.001, Math.min(0.05, deltaSeconds));
 
     if (!this.isEnabled) {
