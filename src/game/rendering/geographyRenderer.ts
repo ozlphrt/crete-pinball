@@ -133,6 +133,15 @@ export class GeographyRenderer {
 
   public setTargetIsland(islandId: string | null): void {
     this.currentTargetIslandId = islandId;
+    if (islandId) {
+      const exists = this.labelObjects.some(
+        (lbl) => (lbl as unknown as { featureId?: string }).featureId === islandId,
+      );
+      if (!exists) {
+        this.renderIslandLabels();
+        return;
+      }
+    }
     this.updateTargetLabelStyles();
   }
 
@@ -474,7 +483,7 @@ export class GeographyRenderer {
     for (const feature of features) {
       if (feature.classification.includes('mainland')) continue;
 
-      if (this.isMajorNamedIsland(feature.id)) {
+      if (this.isMajorNamedIsland(feature.id) || feature.id === this.currentTargetIslandId) {
         const localizedName = this.getLocalizedName(feature, currentLocale).toUpperCase();
         const cx = feature.centroid.x;
         const cy = feature.centroid.y;
@@ -1040,6 +1049,7 @@ export class GeographyRenderer {
       'island-karpathos',
       'island-thasos',
       'island-samothrace',
+      'island-kythira',
     ];
     return majorIds.includes(id);
   }

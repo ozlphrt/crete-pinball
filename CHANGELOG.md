@@ -12,10 +12,10 @@ All notable changes to the Crete Pinball project will be documented in this file
   - Added localized `game.continue` string across English (`Continue`), Turkish (`Devam Et`), and Greek (`Συνέχεια`).
 - **On-Map HUD Information & Bottom Panel Removal**:
   - Removed the bottom footer HUD panel (`.hud-footer`) entirely, expanding the Aegean and Libyan sea map seamlessly to the edge of the viewport.
-  - **Positive Achievement Star Sign for Bonus Islands**:
+  - **Positive Achievement Star Sign for Bonus Islands & Clutter-Free Map**:
     - Replaced the military/combat crosshair reticle, sonar ping, and tactical brackets with a warm celebratory golden achievement design.
     - Features a radiant golden aurora, expanding celebration waves, an 8-pointed golden compass star with a sparkling diamond core, cardinal diamonds, and orbiting constellation sparkles.
-    - Updated the badge from a combat target style (`🎯 TARGET`) to a warm celebratory award pill (`⭐ BONUS: <ISLAND> · +<POINTS>`), with matching radiant gold island label typography.
+    - Eliminated redundant target info banners and badge pillboxes: since the target island's authentic name is already turned on and highlighted directly on the map in radiant gold typography (`#fcd34d`), the map remains completely clean, elegant, and unobstructed.
   - **Crete Paddle Energy Meter**: Moved directly into the map attached to the Crete paddle in the Libyan Sea (`creteBaselineY + 36`), tracking horizontal paddle movement with a dynamic neon cyan/amber energy bar and a high-contrast state badge (`⚡ READY`, `⚡ ARMED`, or charge percentage).
   - **Floating Tactical Status Pill**: Temporary active events (e.g. `⚡ 3-BALL MULTIBALL · 5s`, `🌬️ MELTEMI · 12s`, `⚡ POWER BOUNCE ARMED`) float cleanly below the top stats header with zero screen obstruction during normal play.
 - **Introductory Crete Paddle Oscillation Affordance**:

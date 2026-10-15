@@ -31,21 +31,27 @@ test.describe('Target Island Celebratory Achievement Star Sign Representation', 
       const runCtrl = (scene as any).runController;
       const targetIsland = runCtrl?.currentTarget;
 
+      const targetLabel = (scene as any).geographyRenderer?.labelObjects?.find(
+        (lbl: any) => lbl.featureId === targetIsland?.islandId
+      );
+
       return {
         badgeVisible: badge ? badge.visible : false,
-        badgeText: badge ? badge.text : '',
-        badgeDepth: badge ? badge.depth : 0,
         reticleDepth: reticle ? reticle.depth : 0,
         targetIslandId: targetIsland?.islandId ?? null,
+        targetLabelVisible: targetLabel ? targetLabel.visible : false,
+        targetLabelColor: targetLabel ? targetLabel.style.color : '',
       };
     });
 
     expect(targetInfo).not.toBeNull();
-    expect(targetInfo?.badgeVisible).toBe(true);
-    expect(targetInfo?.badgeText).toContain('BONUS');
-    expect(targetInfo?.badgeDepth).toBe(37);
+    // Redundant badge text is hidden to keep the map clean and unobstructed
+    expect(targetInfo?.badgeVisible).toBe(false);
     expect(targetInfo?.reticleDepth).toBe(35);
     expect(targetInfo?.targetIslandId).toBeTruthy();
+    // The target island's authentic name label on the map is highlighted in glowing gold
+    expect(targetInfo?.targetLabelVisible).toBe(true);
+    expect(targetInfo?.targetLabelColor).toBe('#fcd34d');
 
     // Capture visual artifact screenshot showing green target sign clearly
     await page.screenshot({

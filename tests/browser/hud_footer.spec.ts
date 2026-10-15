@@ -32,6 +32,10 @@ test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
 
         const energy = rc.getCreteEnergySystem();
         energy['currentCharge'] = 1.0;
+
+        if (scene['geographyRenderer']) {
+          scene['geographyRenderer'].setTargetIsland('island-kythira');
+        }
       }
     });
 
@@ -41,9 +45,13 @@ test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
     const onMapInfo = await page.evaluate(() => {
       const game = (window as any).game;
       const scene = game.scene.getScene('GamePlaceholderScene');
+      const kythiraLabel = scene.geographyRenderer?.labelObjects?.find(
+        (lbl: any) => lbl.featureId === 'island-kythira'
+      );
       return {
-        targetBadgeText: scene.targetBadgeText?.text ?? '',
         targetBadgeVisible: scene.targetBadgeText?.visible ?? false,
+        kythiraLabelVisible: kythiraLabel?.visible ?? false,
+        kythiraLabelColor: kythiraLabel?.style?.color ?? '',
         cretePowerText: scene.cretePowerText?.text ?? '',
         cretePowerVisible: scene.cretePowerText?.visible ?? false,
         mapStatusText: scene.mapStatusBadgeText?.text ?? '',
@@ -51,10 +59,10 @@ test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
       };
     });
 
-    expect(onMapInfo.targetBadgeVisible).toBe(true);
-    expect(onMapInfo.targetBadgeText).toContain('BONUS');
-    expect(onMapInfo.targetBadgeText).toContain('KYTHIRA');
-    expect(onMapInfo.targetBadgeText).toContain('+500');
+    // Redundant target badge is hidden since island name is turned on directly on map
+    expect(onMapInfo.targetBadgeVisible).toBe(false);
+    expect(onMapInfo.kythiraLabelVisible).toBe(true);
+    expect(onMapInfo.kythiraLabelColor).toBe('#fcd34d');
 
     expect(onMapInfo.cretePowerVisible).toBe(true);
     expect(onMapInfo.cretePowerText).toBe('⚡ READY');
@@ -99,18 +107,20 @@ test.describe('On-Map HUD Elements (Bottom Panel Removed)', () => {
       }
     });
 
-    await page.waitForTimeout(300);
-
-    const powerInfo = await page.evaluate(() => {
-      const game = (window as any).game;
-      const scene = game.scene.getScene('GamePlaceholderScene');
-      return {
-        powerText: scene.cretePowerText?.text ?? '',
-        powerVisible: scene.cretePowerText?.visible ?? false,
-      };
-    });
-
-    expect(powerInfo.powerVisible).toBe(true);
-    expect(powerInfo.powerText).toBe('55%');
+    await expect
+      .poll(async () => {
+        return await page.evaluate(() => {
+          const game = (window as any).game;
+          const scene = game?.scene?.getScene('GamePlaceholderScene');
+          return {
+            powerText: scene?.cretePowerText?.text ?? '',
+            powerVisible: scene?.cretePowerText?.visible ?? false,
+          };
+        });
+      }, { timeout: 3000 })
+      .toEqual({
+        powerText: '55%',
+        powerVisible: true,
+      });
   });
 });

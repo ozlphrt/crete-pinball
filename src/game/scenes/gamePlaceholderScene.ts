@@ -1422,7 +1422,7 @@ export class GamePlaceholderScene extends Phaser.Scene {
     }
   }
 
-  private updateTargetReticle(targetIslandId: string, bonusPoints: number, time: number): void {
+  private updateTargetReticle(targetIslandId: string, _bonusPoints: number, time: number): void {
     const g = this.targetReticleGraphics;
     g.clear();
 
@@ -1508,39 +1508,10 @@ export class GamePlaceholderScene extends Phaser.Scene {
     g.fillStyle(0xf59e0b, 1.0);
     g.fillCircle(cx, cy, 1.5);
 
-    // --- 7. Celebratory Floating Achievement Badge ---
-    const bounce = Math.sin(time * 0.005) * 3;
-    const beaconTipY = cy - r - 10 + bounce;
-
-    // Golden diamond marker pointing down to the island (achievement pin)
-    g.fillStyle(0x1f1402, 0.95);
-    g.fillTriangle(cx - 7, beaconTipY - 7, cx + 7, beaconTipY - 7, cx, beaconTipY + 4);
-    g.fillStyle(0xf59e0b, 1.0);
-    g.fillTriangle(cx - 5, beaconTipY - 6, cx + 5, beaconTipY - 6, cx, beaconTipY + 2);
-
+    // Ensure targetBadgeText remains hidden since the target island's authentic name
+    // is already turned on and highlighted on the map directly at the island
     if (this.targetBadgeText) {
-      const locale = this.i18n.getLocale();
-      const islandName = feat.names[locale] ?? feat.names.en ?? targetIslandId.replace(/^island-/, '');
-      this.targetBadgeText.setText(`⭐ BONUS: ${islandName.toUpperCase()} · +${bonusPoints}`);
-
-      const badgeW = this.targetBadgeText.width + 20;
-      const badgeH = this.targetBadgeText.height + 8;
-      let badgeX = cx - badgeW / 2;
-      const badgeY = beaconTipY - 9 - badgeH;
-
-      // Keep badge within world bounds horizontally
-      if (badgeX < 14) badgeX = 14;
-      if (badgeX + badgeW > ARENA_CONFIG.worldWidth - 14) badgeX = ARENA_CONFIG.worldWidth - 14 - badgeW;
-
-      // High contrast deep obsidian-amber pill background
-      g.fillStyle(0x1f1402, 0.94);
-      g.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, 7);
-      // Radiant golden outline
-      g.lineStyle(2.0, 0xf59e0b, 1.0);
-      g.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 7);
-
-      this.targetBadgeText.setPosition(badgeX + badgeW / 2, badgeY + badgeH / 2);
-      this.targetBadgeText.setVisible(true);
+      this.targetBadgeText.setVisible(false);
     }
   }
 
